@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>公差積み上げ計算</title>
+<style>
+:root{
+  --bg:#f6f7f9;--card:#fff;--fg:#1d2329;--sub:#5b6670;--line:#d9dee3;
+  --acc:#2563eb;--ok:#15803d;--warn:#b45309;--ng:#b91c1c;--bar1:#2563eb;--bar2:#94a3b8;--pur:#7c3aed;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111418;--card:#1a1f25;--fg:#e6e9ec;--sub:#9aa5af;--line:#2d343c;
+    --acc:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--ng:#f87171;--bar1:#60a5fa;--bar2:#64748b;--pur:#a78bfa;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px;line-height:1.5}
+main{max-width:860px;margin:0 auto;padding:16px;display:flex;flex-direction:column}
+/* 狭い画面では列の囲みを無効にし、order で縦の並び順を決める */
+.col-l,.col-r,.figs{display:contents}
+header{order:0}#sec-items,#sec-vecs{order:1}#sec-set2{order:2}#sec-spec{order:3}#sec-res{order:4}
+#sec-cfig,#sec-vfig{order:5}#sec-dfig0{order:6}#sec-dfig1{order:7}#sec-contrib{order:8}#sec-calc{order:9}#sec-save{order:10}
+/* モードによる表示切り替え */
+body.m1d .only-2d,body.m2d .only-1d{display:none!important}
+h1{font-size:20px;margin:4px 0 2px}
+.lead{color:var(--sub);font-size:13px;margin:0 0 10px}
+.tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.tabs button{border-radius:999px;padding:6px 14px}
+.tabs button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+h2{font-size:15px;margin:0 0 10px}
+input,select,button{font:inherit;color:inherit}
+input[type=text],input[type=number],select{width:100%;padding:6px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);min-width:0}
+input[type=number]{text-align:right}
+input.bad{border-color:var(--ng)}
+button{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 12px;cursor:pointer}
+button.x{padding:4px 9px;color:var(--sub)}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+/* 入力の行（寄与項目・ベクトル） */
+.it{border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px}
+.it-h{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.3fr) minmax(0,.8fr) minmax(0,1.2fr) auto;gap:6px;align-items:end}
+.it-b{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.it-b.six{grid-template-columns:repeat(3,minmax(0,1fr))}
+.fld{display:block;min-width:0}
+.fld>span{display:block;font-size:11px;color:var(--sub);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;padding-bottom:6px;grid-column:span 2}
+.grp{grid-column:1/-1;font-size:11px;color:var(--sub);margin-top:2px;border-top:1px dashed var(--line);padding-top:4px}
+.it .err1{grid-column:1/-1;color:var(--ng);font-size:12px}
+.it .err1:empty{display:none}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid2 label,.set label{font-size:12px;color:var(--sub);display:block;margin-bottom:2px}
+.set{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.spec-o{margin-bottom:8px}.spec-o>div:first-child{font-size:13px;font-weight:600;margin-bottom:4px}
+/* 結果の表 */
+table.res{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+table.res th,table.res td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;font-size:14px}
+table.res th{color:var(--sub);font-weight:600;font-size:12px}
+table.res td.k,table.res th.k{text-align:left;color:var(--sub);font-size:12.5px;font-weight:400}
+table.res tr.big td{font-weight:600}
+.v-ok{color:var(--ok);font-weight:600}.v-warn{color:var(--warn);font-weight:600}.v-ng{color:var(--ng);font-weight:600}
+.verdict{margin-top:10px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);font-weight:600;font-size:14px}
+.verdict.ok{color:var(--ok);border-color:var(--ok)}.verdict.warn{color:var(--warn);border-color:var(--warn)}.verdict.ng{color:var(--ng);border-color:var(--ng)}
+/* 寄与率 */
+.contrib .item{display:grid;grid-template-columns:8em 1fr 4.5em;gap:8px;align-items:center;margin:4px 0;font-size:13px;border-radius:6px;padding:2px 4px}
+.contrib .item[data-drag]{cursor:ew-resize}
+.contrib .item[data-drag]:hover{background:var(--bg)}
+.contrib .tol{font-size:11px;color:var(--sub);display:block}
+.bars{display:flex;flex-direction:column;gap:2px}
+.bar{height:8px;border-radius:4px;background:var(--bar1);min-width:1px}
+.bar.b2{background:var(--bar2)}
+.num{font-variant-numeric:tabular-nums;text-align:right;color:var(--sub)}
+.legend{font-size:12px;color:var(--sub);display:flex;gap:14px;margin-bottom:4px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.err{color:var(--ng);font-size:13px;margin-top:6px}
+.note{font-size:12px;color:var(--sub);margin-top:8px}
+.hint{font-size:12px;color:var(--sub);margin:-4px 0 8px}
+.fig svg{display:block;width:100%;height:auto}
+.fig text{font-family:inherit}
+/* 図と寄与率は横方向（2次元の図は全方向）のドラッグで操作する */
+.dragzone{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+#vecFig{touch-action:none}
+[data-drag]{cursor:ew-resize}
+[data-drag=dir]{cursor:pointer}
+[data-drag=tip]{cursor:move}
+.h-ring{fill:var(--card);stroke-width:2}
+details summary{cursor:pointer;font-size:13px;color:var(--sub)}
+details .note{margin-top:4px}
+@media (max-width:600px){
+  .it-h{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}
+  .it-h .x{grid-column:3;grid-row:1;align-self:end}
+  table.res .sub{display:block;font-size:12px;font-weight:400;color:var(--sub)}
+  table.res td.k{width:7.5em}
+  .contrib .item{grid-template-columns:6em 1fr 4em}
+  .set{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* PC（横1200px以上）：左に入力、右に結果と図の2列 */
+@media (min-width:1200px){
+  main{max-width:1760px;display:grid;grid-template-columns:minmax(700px,760px) minmax(0,1fr);column-gap:16px;align-items:start}
+  header{grid-column:1/3}
+  .col-l,.col-r{display:block}
+  .contrib .item{grid-template-columns:11em 1fr 4.5em}
+  /* 入力の行を横1行に並べる（名称・種類・係数・分布・値3つ・削除） */
+  .it{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.15fr) minmax(0,.6fr) minmax(0,1.2fr) repeat(3,minmax(0,1fr)) 34px;gap:6px;align-items:end;padding:6px 8px;margin-bottom:6px}
+  .it-h,.it-b{display:contents}
+  .it-h .x{grid-column:8;grid-row:1}
+  .it .chk{grid-column:span 2}
+  .it .nl{grid-column:5}
+}
+/* 横1500px以上（1080pモニター等）：図を横に並べる */
+@media (min-width:1500px){
+  .figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;align-items:start}
+}
+</style>
+</head>
+<body class="m1d">
+<main>
+  <header>
+    <h1>公差積み上げ計算</h1>
+    <p class="lead">ワーストケース・統計（RSS）・補正RSS・モンテカルロで寸法チェーンを評価します。単位は mm と °。計算は端末内だけで行います。</p>
+    <div class="tabs" role="group" aria-label="計算の種類">
+      <button id="tab1d" aria-pressed="true">1次元（感度係数・幾何公差）</button>
+      <button id="tab2d" aria-pressed="false">2次元ベクトルループ</button>
+    </div>
+  </header>
+
+  <div class="col-l">
+  <section class="card only-1d" id="sec-items">
+    <h2>寄与項目</h2>
+    <div id="items"></div>
+    <div class="row-actions">
+      <button data-add="dim">＋ 寸法</button>
+      <button data-add="prof">＋ 輪郭度など</button>
+      <button data-add="pos">＋ 位置度</button>
+      <button data-add="float">＋ 組付けの遊び</button>
+    </div>
+    <div class="row-actions">
+      <button id="sample1">例を読み込む</button>
+      <button id="clear1">すべて消す</button>
+    </div>
+    <details class="note">
+      <summary>入力の決まり</summary>
+      <p class="note">出力（すき間）＝ Σ 係数 × 項目の値。すき間を大きくする寸法は係数 ＋1、小さくする寸法は −1。てこ比や角度で効き方が変わる場合は、その比を係数に入れる（例：0.5、−1.2）。下の許容差は符号付きで入れる。</p>
+      <p class="note">輪郭度など：公差値 t を ±t/2 のずれとして積む（面の輪郭度・平面度・直角度などを1方向のずれに換算）。</p>
+      <p class="note">位置度：φt を ±t/2 として積む。Ⓜ を付けると、サイズの公差幅だけボーナス公差が加わる（最悪値は ±(t＋サイズ公差幅)/2）。統計計算ではサイズを公差の中央を中心とする正規分布、位置のずれを円内に一様（または正規）とみなす。</p>
+      <p class="note">組付けの遊び：穴と軸（ボルト）のすき間の範囲で一様にずれるとみなす。最悪値は ±(最大の穴 − 最小の軸)/2。データム穴の Ⓜ によるデータムシフトも、データム穴とピン（最大実体境界）の寸法を入れれば同じ扱いになる。</p>
+    </details>
+  </section>
+
+  <section class="card only-2d" id="sec-vecs">
+    <h2>ベクトル</h2>
+    <div id="vecs"></div>
+    <div class="row-actions">
+      <button id="addVec">＋ ベクトル</button>
+      <button id="sample2">例を読み込む</button>
+      <button id="clear2">すべて消す</button>
+    </div>
+    <details class="note">
+      <summary>入力の決まり</summary>
+      <p class="note">原点からベクトルを順につなぐ。角度は x 軸から反時計回り（°）。「前から」を選ぶと、前のベクトルの向きからの相対角度になる。</p>
+      <p class="note">出力1は、目標点から見た終点の「測定方向」成分（すき間など）、出力2はそれと直交する成分（段差など）。感度係数は中心値のまわりで数値微分して求め、ワーストケースと統計はその線形近似で、モンテカルロは非線形のまま計算する。</p>
+    </details>
+  </section>
+
+  <section class="card only-2d" id="sec-set2">
+    <h2>出力の設定</h2>
+    <div class="set">
+      <div><label for="phi">測定方向（°）</label><input type="number" id="phi" step="any"></div>
+      <div><label for="tx">目標点 x</label><input type="number" id="tx" step="any"></div>
+      <div><label for="ty">目標点 y</label><input type="number" id="ty" step="any"></div>
+      <div><label for="on0">出力1の名前</label><input type="text" id="on0"></div>
+      <div><label for="on1">出力2の名前</label><input type="text" id="on1"></div>
+    </div>
+  </section>
+
+  <section class="card" id="sec-spec">
+    <h2>規格（任意）</h2>
+    <div id="specBox"></div>
+  </section>
+
+  <section class="card" id="sec-calc">
+    <h2>計算の設定</h2>
+    <div class="grid2">
+      <div><label for="mcn">モンテカルロの回数</label>
+        <select id="mcn"><option value="0">行わない</option><option value="10000">1万回</option><option value="100000">10万回</option><option value="1000000">100万回</option></select></div>
+    </div>
+    <p class="note">統計（±3σ）は、各項目の分布から求めた σ に感度係数を掛けて二乗和平方根をとったもの（全項目が正規分布なら従来の RSS と一致）。補正RSS は従来の RSS に 1.5 を掛けたもの（Bender）。モンテカルロは同じ入力なら同じ結果になるよう、乱数の種を固定している。</p>
+  </section>
+
+  <section class="card" id="sec-save">
+    <h2>保存</h2>
+    <div class="row-actions" style="margin-top:0">
+      <button id="exp">JSONで書き出し</button>
+      <button id="imp">JSONを読み込む</button>
+      <input type="file" id="file" accept="application/json,.json" hidden>
+    </div>
+    <p class="note">入力内容はこの端末のブラウザに自動保存されます。</p>
+  </section>
+  </div>
+
+  <div class="col-r">
+  <section class="card" id="sec-res">
+    <h2>結果</h2>
+    <div id="resBox"></div>
+    <div id="rowErr" class="err"></div>
+  </section>
+
+  <div class="figs">
+  <section class="card fig only-1d" id="sec-cfig">
+    <h2>寸法チェーン図</h2>
+    <p class="hint">○を左右にドラッグすると基準寸法が変わる。矢印をタップすると係数の符号が反転する。</p>
+    <div id="chainFig" class="dragzone"></div>
+    <p class="note">寸法の項目だけを描く（幾何公差と組付けの遊びは基準値が 0 のため図に出ない）。</p>
+  </section>
+
+  <section class="card fig only-2d" id="sec-vfig">
+    <h2>ベクトル図</h2>
+    <p class="hint">ベクトルの先の○をドラッグすると、長さと角度が変わる。</p>
+    <div id="vecFig"></div>
+  </section>
+
+  <section class="card fig" id="sec-dfig0">
+    <h2 id="dfigT0">出力の分布と規格</h2>
+    <p class="hint">緑の規格線を左右にドラッグすると、下限・上限が変わる。</p>
+    <div id="distFig0" class="dragzone"></div>
+  </section>
+
+  <section class="card fig only-2d" id="sec-dfig1">
+    <h2 id="dfigT1">出力2の分布と規格</h2>
+    <p class="hint">緑の規格線を左右にドラッグすると、下限・上限が変わる。</p>
+    <div id="distFig1" class="dragzone"></div>
+  </section>
+  </div>
+
+  <section class="card contrib" id="sec-contrib">
+    <h2>寄与率</h2>
+    <p class="hint">行を左右にドラッグすると、その項目の公差幅が変わる（公差域の中心は保ったまま）。</p>
+    <div class="legend" id="legend"></div>
+    <div id="contrib" class="dragzone"></div>
+  </section>
+  </div>
+</main>
+
+<script>
+/*ENGINE*/
+/*UI*/
+</script>
+</body>
+</html>
