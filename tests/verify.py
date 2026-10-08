@@ -18,11 +18,16 @@ def model(it):
         dist = it['dist']
         sd = {'normal': h/3, 'uniform': h/math.sqrt(3), 'tri': h/math.sqrt(6)}.get(dist)
         mu = c
-        if dist == 'cpk': sd = h / (3 * it['cpk'])
+        if dist == 'cpk':
+            sh = it.get('shift', 0) or 0
+            mu, sd = c + sh, (h - abs(sh)) / (3 * it['cpk'])
         if dist == 'meas': mu, sd = it['mean'], it['sd']
         return a, it['nom'], c, h, mu, sd
     if t == 'prof':
         h = it['t'] / 2
+        if it['dist'] == 'cpk':
+            sh = it.get('shift', 0) or 0
+            return a, 0, 0, h, sh, (h - abs(sh)) / (3 * it['cpk'])
         return a, 0, 0, h, 0, {'normal': h/3, 'uniform': h/math.sqrt(3), 'tri': h/math.sqrt(6)}[it['dist']]
     if t == 'pos':
         w = (it['sup'] - it['slo']) if it['mmc'] else 0
@@ -94,6 +99,67 @@ for k in range(2):
     check(f'2次元 出力{k+1} 統計のσ（線形）', r['sd'], sd, sd * 1e-3)
     m = acc[k][0]/N; s2 = math.sqrt(acc[k][1]/N - m*m)
     check(f'2次元 出力{k+1} MCのσ（Python のMCと ±2%）', r['mc']['sd'], s2, s2 * 0.02)
+
+# ---- 判定 ----
+for k, j in enumerate(d['judge'], 1):
+    ok = j['got'] == j['exp']
+    print(f"{'OK ' if ok else 'NG '} 判定の例{k}: エンジン {j['got']} / 期待 {j['exp']}")
+    if not ok: fails.append(f'判定の例{k}')
+
+# ---- 逆算：見つけた倍率で、目標のちょうど境界になっているか ----
+def stats1d(items):
+    ms = [model(it) for it in items]
+    center = sum(a*c for a, n, c, h, mu, sd in ms); wc = sum(abs(a)*h for a, n, c, h, mu, sd in ms)
+    mean = sum(a*mu for a, n, c, h, mu, sd in ms); sd = math.sqrt(sum((a*s)**2 for a, n, c, h, mu, s in ms))
+    return [(center, wc, mean, sd)]
+def stats2d(dd):
+    vv = dd['vecs']
+    def lp(p):
+        th = x = y = 0.0
+        for i, q in enumerate(vv):
+            A = math.radians(p[2*i+1]); th = th + A if q['rel'] else A
+            x += p[2*i]*math.cos(th); y += p[2*i]*math.sin(th)
+        f = math.radians(dd['phi']); dx, dy = x - dd['tx'], y - dd['ty']
+        return [dx*math.cos(f) + dy*math.sin(f), -dx*math.sin(f) + dy*math.cos(f)]
+    cen, hs, sds = [], [], []
+    for q in vv:
+        for nom, up, lo in ((q['ln'], q['lup'], q['llo']), (q['an'], q['aup'], q['alo'])):
+            c, h = nom + (up+lo)/2, (up-lo)/2
+            cen.append(c); hs.append(h); sds.append({'normal': h/3, 'uniform': h/math.sqrt(3), 'tri': h/math.sqrt(6)}[q['dist']])
+    f0 = lp(cen); res = []
+    sens = []
+    for i in range(len(cen)):
+        p = cen[:]; p[i] += 1e-6; f1 = lp(p); p[i] -= 2e-6; f2 = lp(p)
+        sens.append([(f1[k]-f2[k])/2e-6 for k in range(2)])
+    for k in range(2):
+        res.append((f0[k], sum(abs(s[k])*h for s, h in zip(sens, hs)), f0[k], math.sqrt(sum((s[k]*q)**2 for s, q in zip(sens, sds)))))
+    return res
+def margin(st, spec, target):
+    # 目標に対する余裕（0 なら境界）。全出力のうち最も厳しいもの
+    m = []
+    for (center, wc, mean, sd), sp in zip(st, spec):
+        lo, hi = sp.get('min'), sp.get('max')
+        if lo is None and hi is None: continue
+        if target['type'] == 'wc':
+            if lo is not None: m.append((center - wc) - lo)
+            if hi is not None: m.append(hi - (center + wc))
+        else:
+            cs = []
+            if hi is not None: cs.append((hi - mean)/(3*sd))
+            if lo is not None: cs.append((mean - lo)/(3*sd))
+            m.append(min(cs) - target['cpk'])
+    return min(m)
+for a in d['alloc']:
+    st = (lambda dd: stats1d(dd['items']) if a['mode'] == '1d' else stats2d(dd))
+    name = f"逆算 {a['mode']} {a['target']['type']}"
+    if a['scaled'] is None: print(f"-- {name}: 成立しない（検算対象外）"); continue
+    mg = margin(st(a['scaled']), a['data']['spec'], a['target'])
+    check(f"{name} 全項目同率 k={a['k']:.4f} の余裕（0 が境界）", mg, 0, 1e-6)
+    for n, s1 in enumerate(a['single']):
+        if s1['scaled'] is None: continue
+        if s1['k'] == 0:   # 0 まで縮めても境界に届かない場合は余裕が正になる
+            continue
+        check(f"{name} 1項目（変数{n+1}）k={s1['k']:.4f} の余裕", margin(st(s1['scaled']), a['data']['spec'], a['target']), 0, 1e-6)
 
 print('\n不一致：' + ('なし' if not fails else '、'.join(fails)))
 raise SystemExit(1 if fails else 0)

@@ -29,13 +29,13 @@ function normCdf(z){
 //   normal：±h を ±3σ とする正規分布
 //   uniform：±h の一様分布
 //   tri：±h の三角分布
-//   cpk：中心 c、σ = h / (3·Cpk) の正規分布（工程が中心にある前提）
+//   cpk：平均 c + shift、σ = (h − |shift|) / (3·Cpk) の正規分布（shift は公差中心からの平均のずれ）
 //   meas：実測の平均 mean と標準偏差 sd を使う正規分布
 function scalarStats(c, h, d){
   switch (d.dist) {
     case 'uniform': return {mu: c, sd: h / Math.sqrt(3)};
     case 'tri':     return {mu: c, sd: h / Math.sqrt(6)};
-    case 'cpk':     return {mu: c, sd: h / (3 * d.cpk)};
+    case 'cpk':     { const s = d.shift || 0; return {mu: c + s, sd: (h - Math.abs(s)) / (3 * d.cpk)}; }
     case 'meas':    return {mu: d.mean, sd: d.sd};
     default:        return {mu: c, sd: h / 3};
   }
@@ -44,7 +44,7 @@ function scalarSample(c, h, d, r){
   switch (d.dist) {
     case 'uniform': return c + (2 * r() - 1) * h;
     case 'tri':     return c + (r() - r()) * h;
-    case 'cpk':     return c + gauss(r) * h / (3 * d.cpk);
+    case 'cpk':     { const s = d.shift || 0; return c + s + gauss(r) * (h - Math.abs(s)) / (3 * d.cpk); }
     case 'meas':    return d.mean + gauss(r) * d.sd;
     default:        return c + gauss(r) * h / 3;
   }
@@ -97,10 +97,28 @@ function itemModel(it){
   throw new Error('unknown type ' + it.type);
 }
 
+// 部品が公差を外れる見込みがあるか（ワーストケースは「全部品が公差内」が前提のため）
+//   meas：実測の平均 ± 3σ が公差域をはみ出す、cpk：Cpk が 1 未満
+function partWarn(d, c, h){
+  if (d.dist === 'meas' && Math.abs(d.mean - c) + 3 * d.sd > h + 1e-12) return 'meas';
+  if (d.dist === 'cpk' && d.cpk < 1 - 1e-12) return 'cpk';
+  return null;
+}
+// 出力の Cpk（正規近似）。片側規格なら片側だけで求める
+function outCpk(mean, sd, smin, smax){
+  if (smin === null && smax === null) return null;
+  const inside = (smin === null || mean >= smin) && (smax === null || mean <= smax);
+  if (!(sd > 0)) return inside ? Infinity : -Infinity;
+  const a = [];
+  if (smax !== null) a.push((smax - mean) / (3 * sd));
+  if (smin !== null) a.push((mean - smin) / (3 * sd));
+  return Math.min(...a);
+}
+
 // ---- 出力1つ分の集計 ----
 // lin：{nom, center, wcHalf, mean, sd, rssHalf, contrib:[{wc, var}]}（線形化した結果）
 // samples：モンテカルロの出力値
-function summarize(lin, samples, smin, smax){
+function summarize(lin, samples, smin, smax, warns = []){
   const res = {
     nom: lin.nom, center: lin.center,
     wcMin: lin.center - lin.wcHalf, wcMax: lin.center + lin.wcHalf, wcHalf: lin.wcHalf,
@@ -108,7 +126,8 @@ function summarize(lin, samples, smin, smax){
     stMin: lin.mean - 3 * lin.sd, stMax: lin.mean + 3 * lin.sd,
     // 補正RSS（Bender）：公差の二乗和平方根に 1.5 を掛ける
     bdMin: lin.center - 1.5 * lin.rssHalf, bdMax: lin.center + 1.5 * lin.rssHalf, rssHalf: lin.rssHalf,
-    contrib: lin.contrib
+    contrib: lin.contrib,
+    warns
   };
   if (samples && samples.length) {
     const s = Float64Array.from(samples).sort();
@@ -125,6 +144,7 @@ function summarize(lin, samples, smin, smax){
               ppm: (smin === null && smax === null) ? null : out / s.length * 1e6};
   }
   res.ppmNormal = normalPpm(res.mean, res.sd, smin, smax);
+  res.cpk = outCpk(res.mean, res.sd, smin, smax);
   res.verdict = judge(res, smin, smax);
   return res;
 }
@@ -137,12 +157,18 @@ function normalPpm(mu, sd, smin, smax){
   if (smax !== null) p += 1 - normCdf((smax - mu) / sd);
   return p * 1e6;
 }
-// 判定：ワーストケースで規格内なら合格、統計（±3σ）で規格内なら条件付き、それ以外は不合格
+// 判定
+//   合格    ：全部品が公差内である前提が成り立ち、ワーストケースでも規格内
+//   条件付き：統計（モンテカルロがあれば 0.135〜99.865%、なければ ±3σ）では規格内
+//   不合格  ：統計でも規格外
+// 実測分布や Cpk < 1 の部品を含むと「全部品が公差内」の前提が崩れるため、ワーストケースでは合格にしない
 function judge(r, smin, smax){
   if (smin === null && smax === null) return null;
   const inside = (lo, hi) => (smin === null || lo >= smin - 1e-12) && (smax === null || hi <= smax + 1e-12);
-  if (inside(r.wcMin, r.wcMax)) return 'ok';
-  if (inside(r.stMin, r.stMax)) return 'warn';
+  const statIn = r.mc ? inside(r.mc.lo, r.mc.hi) : inside(r.stMin, r.stMax);
+  const wcValid = !(r.warns && r.warns.some(w => w));
+  if (wcValid && inside(r.wcMin, r.wcMax)) return 'ok';
+  if (statIn) return 'warn';
   return 'ng';
 }
 
@@ -173,7 +199,8 @@ function analyze1D(items, opt){
       samples[k] = v;
     }
   }
-  return summarize(lin, samples, opt.smin ?? null, opt.smax ?? null);
+  const warns = items.map((it, i) => it.type === 'dim' || it.type === 'prof' ? partWarn(it, ms[i].c, ms[i].h) : null);
+  return summarize(lin, samples, opt.smin ?? null, opt.smax ?? null, warns);
 }
 
 // ---- 2次元ベクトルループ ----
@@ -249,10 +276,96 @@ function analyze2D(vecs, opt){
       contrib: ps.map((q, i) => ({wc: sw > 0 ? wcs[i] / sw : 0, var: sv > 0 ? vars[i] / sv : 0, a: sens[i][k], h: q.h, sd: q.sd}))
     };
     const sp = (opt.spec && opt.spec[k]) || {};
-    return summarize(lin, samples && samples[k], sp.min ?? null, sp.max ?? null);
+    const warns = vecs.map(v => partWarn(v, 0, 0));
+    return summarize(lin, samples && samples[k], sp.min ?? null, sp.max ?? null, warns);
   });
   return {outs, sens, end: {x: f0[2], y: f0[3]}};
 }
 
-if (typeof module !== 'undefined') module.exports = {makeRng, gauss, normCdf, scalarStats, itemModel, analyze1D, loop2D, loopPoints, analyze2D, normalPpm, judge};
+// ---- 公差の逆算 ----
+// 目標（target）を満たすには、調整できる項目の公差を何倍にすればよいかを二分法で求める
+//   mode '1d'：data = {items, spec:[{min,max}]}　'2d'：data = {vecs, phi, tx, ty, spec:[{..},{..}]}
+//   target = {type:'wc'}（ワーストケースで規格内）| {type:'cpk', cpk}（出力の Cpk ≥ 目標、正規近似）
+// 調整の対象：1次元は寸法・輪郭度など・位置度（φt のみ。ボーナス公差のもとのサイズ公差は変えない）
+//             実測分布と組付けの遊びは対象外。2次元は各ベクトルの長さと角度
+function evalOuts(mode, data){
+  if (mode === '1d') { const sp = data.spec[0] || {}; return [analyze1D(data.items, {n: 0, smin: sp.min ?? null, smax: sp.max ?? null})]; }
+  return analyze2D(data.vecs, {n: 0, phi: data.phi || 0, tx: data.tx || 0, ty: data.ty || 0, spec: data.spec}).outs;
+}
+function meetsTarget(outs, spec, target){
+  let any = false;
+  for (let k = 0; k < outs.length; k++) {
+    const sp = spec[k] || {}, lo = sp.min ?? null, hi = sp.max ?? null;
+    if (lo === null && hi === null) continue;
+    any = true;
+    const r = outs[k];
+    if (!isFinite(r.sd) || r.sd < 0) return false;
+    if (target.type === 'wc') {
+      if (r.warns.some(w => w)) return false;      // 公差外れの部品がある限りワーストケースは保証できない
+      if ((lo !== null && r.wcMin < lo - 1e-12) || (hi !== null && r.wcMax > hi + 1e-12)) return false;
+    } else if (!(r.cpk >= target.cpk - 1e-9)) return false;
+  }
+  return any;
+}
+function allocVars(mode, data){
+  const v = [];
+  if (mode === '1d') data.items.forEach((it, i) => { if (it.dist !== 'meas' && it.type !== 'float') v.push({i, part: null}); });
+  else data.vecs.forEach((q, i) => { v.push({i, part: 'l'}, {i, part: 'a'}); });
+  return v;
+}
+// 公差域の中心を保ったまま、公差の半幅を k 倍にする
+function scaleData(mode, data, vars, k){
+  const d = JSON.parse(JSON.stringify(data));
+  let ok = true;
+  for (const {i, part} of vars) {
+    if (mode === '1d') {
+      const it = d.items[i];
+      if (it.type === 'dim') {
+        const c = (it.up + it.lo) / 2, h = (it.up - it.lo) / 2;
+        it.up = c + k * h; it.lo = c - k * h;
+        if (it.dist === 'cpk' && Math.abs(it.shift || 0) >= k * h && k * h > 0) ok = false;
+      } else {
+        it.t *= k;
+        if (it.type === 'prof' && it.dist === 'cpk' && Math.abs(it.shift || 0) >= it.t / 2 && it.t > 0) ok = false;
+      }
+      // 半幅が 0 なのに平均のずれが残る場合は、Cpk の定義が成り立たない
+      if (it.dist === 'cpk' && (it.shift || 0) !== 0 && k === 0) ok = false;
+    } else {
+      const q = d.vecs[i], [u, l] = part === 'l' ? ['lup', 'llo'] : ['aup', 'alo'];
+      const c = (q[u] + q[l]) / 2, h = (q[u] - q[l]) / 2;
+      q[u] = c + k * h; q[l] = c - k * h;
+    }
+  }
+  return {ok, data: d};
+}
+function findK(mode, data, target, vars){
+  const test = k => { const s = scaleData(mode, data, vars, k); return s.ok && meetsTarget(evalOuts(mode, s.data), data.spec, target); };
+  const KMAX = 10;
+  if (test(1)) {
+    if (test(KMAX)) return {k: KMAX, cap: true};
+    let a = 1, b = KMAX;
+    for (let it = 0; it < 50; it++) { const m = (a + b) / 2; if (test(m)) a = m; else b = m; }
+    return {k: a, cap: false};
+  }
+  if (!test(0)) return {k: null, cap: false};
+  let a = 0, b = 1;
+  for (let it = 0; it < 50; it++) { const m = (a + b) / 2; if (test(m)) a = m; else b = m; }
+  return {k: a, cap: false};
+}
+function allocate(mode, data, target){
+  const hasSpec = data.spec.some(sp => sp && ((sp.min ?? null) !== null || (sp.max ?? null) !== null));
+  if (!hasSpec) return {hasSpec: false};
+  const vars = allocVars(mode, data);
+  const base = evalOuts(mode, data);
+  return {
+    hasSpec: true, vars, base,
+    met: meetsTarget(base, data.spec, target),
+    uniform: vars.length ? findK(mode, data, target, vars) : null,
+    single: vars.map(v => ({...v, ...findK(mode, data, target, [v])})),
+    // 両側規格のとき、平均を規格中心に寄せるのに必要な量（基準寸法の調整量の目安）
+    center: base.map((r, k) => { const sp = data.spec[k] || {}; return (sp.min ?? null) !== null && (sp.max ?? null) !== null ? (sp.min + sp.max) / 2 - r.mean : null; })
+  };
+}
+
+if (typeof module !== 'undefined') module.exports = {makeRng, gauss, normCdf, scalarStats, itemModel, analyze1D, loop2D, loopPoints, analyze2D, normalPpm, judge, outCpk, partWarn, allocate, scaleData, evalOuts, meetsTarget};
 // ===== 計算エンジンここまで =====

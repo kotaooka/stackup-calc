@@ -22,14 +22,18 @@ main{max-width:860px;margin:0 auto;padding:16px;display:flex;flex-direction:colu
 /* 狭い画面では列の囲みを無効にし、order で縦の並び順を決める */
 .col-l,.col-r,.figs{display:contents}
 header{order:0}#sec-items,#sec-vecs{order:1}#sec-set2{order:2}#sec-spec{order:3}#sec-res{order:4}
-#sec-cfig,#sec-vfig{order:5}#sec-dfig0{order:6}#sec-dfig1{order:7}#sec-contrib{order:8}#sec-calc{order:9}#sec-save{order:10}
+#sec-bfig,#sec-vfig{order:5}#sec-dfig0{order:6}#sec-dfig1{order:7}#sec-contrib{order:8}#sec-alloc{order:9}
+#sec-cases{order:10}#sec-calc{order:11}#sec-save{order:12}
 /* モードによる表示切り替え */
 body.m1d .only-2d,body.m2d .only-1d{display:none!important}
 h1{font-size:20px;margin:4px 0 2px}
 .lead{color:var(--sub);font-size:13px;margin:0 0 10px}
-.tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.toolbar{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap;align-items:center}
+.toolbar .sp{flex:1}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{border-radius:999px;padding:6px 14px}
 .tabs button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+button:disabled{opacity:.4;cursor:default}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
 h2{font-size:15px;margin:0 0 10px}
 input,select,button{font:inherit;color:inherit}
@@ -37,17 +41,24 @@ input[type=text],input[type=number],select{width:100%;padding:6px 7px;border:1px
 input[type=number]{text-align:right}
 input.bad{border-color:var(--ng)}
 button{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 12px;cursor:pointer}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button.sm{padding:3px 9px;font-size:13px}
 button.x{padding:4px 9px;color:var(--sub)}
 .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+#notice{display:none;margin:0 0 12px;padding:8px 12px;border-radius:8px;border:1px solid var(--acc);font-size:13px}
+#notice.on{display:flex;gap:10px;align-items:center}
+#sharePanel{margin:0 0 12px}
+#sharePanel .grid{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px}
 /* 入力の行（寄与項目・ベクトル） */
 .it{border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px}
+.it.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.it.flash{animation:flash 1s}
+@keyframes flash{0%{background:color-mix(in srgb,var(--acc) 22%,transparent)}100%{background:transparent}}
 .it-h{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.3fr) minmax(0,.8fr) minmax(0,1.2fr) auto;gap:6px;align-items:end}
 .it-b{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
-.it-b.six{grid-template-columns:repeat(3,minmax(0,1fr))}
 .fld{display:block;min-width:0}
 .fld>span{display:block;font-size:11px;color:var(--sub);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chk{display:flex;align-items:center;gap:6px;font-size:13px;padding-bottom:6px;grid-column:span 2}
-.grp{grid-column:1/-1;font-size:11px;color:var(--sub);margin-top:2px;border-top:1px dashed var(--line);padding-top:4px}
 .it .err1{grid-column:1/-1;color:var(--ng);font-size:12px}
 .it .err1:empty{display:none}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -60,11 +71,14 @@ table.res th,table.res td{padding:5px 6px;border-bottom:1px solid var(--line);te
 table.res th{color:var(--sub);font-weight:600;font-size:12px}
 table.res td.k,table.res th.k{text-align:left;color:var(--sub);font-size:12.5px;font-weight:400}
 table.res tr.big td{font-weight:600}
+table.res .sub{font-size:12px;font-weight:400;color:var(--sub)}
+.pending{color:var(--sub);font-weight:400}
 .v-ok{color:var(--ok);font-weight:600}.v-warn{color:var(--warn);font-weight:600}.v-ng{color:var(--ng);font-weight:600}
 .verdict{margin-top:10px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);font-weight:600;font-size:14px}
 .verdict.ok{color:var(--ok);border-color:var(--ok)}.verdict.warn{color:var(--warn);border-color:var(--warn)}.verdict.ng{color:var(--ng);border-color:var(--ng)}
+.warnbox{margin-top:8px;font-size:12.5px;color:var(--warn)}
 /* 寄与率 */
-.contrib .item{display:grid;grid-template-columns:8em 1fr 4.5em;gap:8px;align-items:center;margin:4px 0;font-size:13px;border-radius:6px;padding:2px 4px}
+.contrib .item{display:grid;grid-template-columns:8em 1fr 7.5em;gap:8px;align-items:center;margin:4px 0;font-size:13px;border-radius:6px;padding:2px 4px}
 .contrib .item[data-drag]{cursor:ew-resize}
 .contrib .item[data-drag]:hover{background:var(--bg)}
 .contrib .tol{font-size:11px;color:var(--sub);display:block}
@@ -79,29 +93,52 @@ table.res tr.big td{font-weight:600}
 .hint{font-size:12px;color:var(--sub);margin:-4px 0 8px}
 .fig svg{display:block;width:100%;height:auto}
 .fig text{font-family:inherit}
+/* ブロック図のパレット */
+.palette{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.chip{border-radius:999px;padding:4px 11px;font-size:13px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.chip.p{border-color:var(--acc);color:var(--acc)}
+.chip.n{border-color:var(--warn);color:var(--warn)}
+.chip.g{border-color:var(--pur);color:var(--pur)}
+#ghost{position:fixed;pointer-events:none;z-index:50;padding:4px 11px;border-radius:999px;font-size:13px;background:var(--card);border:1px solid var(--acc);box-shadow:0 4px 12px rgba(0,0,0,.2);display:none}
 /* 図と寄与率は横方向（2次元の図は全方向）のドラッグで操作する */
 .dragzone{touch-action:pan-y;user-select:none;-webkit-user-select:none}
 #vecFig{touch-action:none}
+.blk{touch-action:none;cursor:grab}
 [data-drag]{cursor:ew-resize}
-[data-drag=dir]{cursor:pointer}
 [data-drag=tip]{cursor:move}
+[data-drag=bmove]{cursor:grab}
 .h-ring{fill:var(--card);stroke-width:2}
 details summary{cursor:pointer;font-size:13px;color:var(--sub)}
 details .note{margin-top:4px}
+/* 逆算・ケース比較の表 */
+table.tb{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.tb th,table.tb td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+table.tb th{color:var(--sub);font-weight:600;font-size:12px}
+table.tb .l{text-align:left}
+table.tb tr.cur td{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+.scroll{overflow-x:auto}
+table.tb.wide{min-width:600px}
+table.tb button{white-space:nowrap}
+.alloc-s{font-size:13.5px;margin:6px 0}
+.alloc-s b{font-weight:600}
+.casebar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-bottom:8px}
+/* 印刷用レポート（画面では非表示） */
+#report{display:none}
 @media (max-width:600px){
   .it-h{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}
   .it-h .x{grid-column:3;grid-row:1;align-self:end}
-  table.res .sub{display:block;font-size:12px;font-weight:400;color:var(--sub)}
+  table.res .sub{display:block}
   table.res td.k{width:7.5em}
-  .contrib .item{grid-template-columns:6em 1fr 4em}
+  .contrib .item{grid-template-columns:6em 1fr 6.5em}
   .set{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .toolbar .sp{flex-basis:100%;height:0}
 }
 /* PC（横1200px以上）：左に入力、右に結果と図の2列 */
 @media (min-width:1200px){
-  main{max-width:1760px;display:grid;grid-template-columns:minmax(700px,760px) minmax(0,1fr);column-gap:16px;align-items:start}
+  main{max-width:1800px;display:grid;grid-template-columns:minmax(700px,760px) minmax(0,1fr);column-gap:16px;align-items:start}
   header{grid-column:1/3}
   .col-l,.col-r{display:block}
-  .contrib .item{grid-template-columns:11em 1fr 4.5em}
+  .contrib .item{grid-template-columns:11em 1fr 7.5em}
   /* 入力の行を横1行に並べる（名称・種類・係数・分布・値3つ・削除） */
   .it{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.15fr) minmax(0,.6fr) minmax(0,1.2fr) repeat(3,minmax(0,1fr)) 34px;gap:6px;align-items:end;padding:6px 8px;margin-bottom:6px}
   .it-h,.it-b{display:contents}
@@ -109,9 +146,26 @@ details .note{margin-top:4px}
   .it .chk{grid-column:span 2}
   .it .nl{grid-column:5}
 }
-/* 横1500px以上（1080pモニター等）：図を横に並べる */
+/* 横1500px以上（1080pモニター等）：図を2列に並べる。ブロック図は全幅 */
 @media (min-width:1500px){
   .figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;align-items:start}
+  #sec-bfig{grid-column:1/3}
+}
+@media print{
+  :root,:root:not([data-theme="light"]){
+    --bg:#fff;--card:#fff;--fg:#000;--sub:#444;--line:#bbb;
+    --acc:#1d4ed8;--ok:#15803d;--warn:#b45309;--ng:#b91c1c;--bar1:#1d4ed8;--bar2:#94a3b8;--pur:#6d28d9;
+  }
+  body{background:#fff;font-size:10.5pt}
+  main,#ghost{display:none!important}
+  #report{display:block}
+  #report h1{font-size:16pt;margin:0 0 2mm}
+  #report h2{font-size:12pt;margin:5mm 0 2mm;border-bottom:1px solid #999}
+  #report .fig{break-inside:avoid;margin-bottom:3mm}
+  #report .fig svg{max-height:120mm;max-width:175mm}
+  #report button{display:none}
+  #report table{break-inside:auto}
+  @page{size:A4;margin:12mm}
 }
 </style>
 </head>
@@ -120,9 +174,21 @@ details .note{margin-top:4px}
   <header>
     <h1>公差積み上げ計算</h1>
     <p class="lead">ワーストケース・統計（RSS）・補正RSS・モンテカルロで寸法チェーンを評価します。単位は mm と °。計算は端末内だけで行います。</p>
-    <div class="tabs" role="group" aria-label="計算の種類">
-      <button id="tab1d" aria-pressed="true">1次元（感度係数・幾何公差）</button>
-      <button id="tab2d" aria-pressed="false">2次元ベクトルループ</button>
+    <div class="toolbar">
+      <div class="tabs" role="group" aria-label="計算の種類">
+        <button id="tab1d" aria-pressed="true">1次元（感度係数・幾何公差）</button>
+        <button id="tab2d" aria-pressed="false">2次元ベクトルループ</button>
+      </div>
+      <span class="sp"></span>
+      <button id="undo" title="元に戻す（Ctrl+Z）" disabled>↶ 元に戻す</button>
+      <button id="redo" title="やり直す（Ctrl+Y）" disabled>↷ やり直す</button>
+      <button id="share">共有URL</button>
+      <button id="print">レポート印刷</button>
+    </div>
+    <div id="notice"><span id="noticeText"></span><button class="sm" id="noticeClose">閉じる</button></div>
+    <div id="sharePanel" class="card" hidden>
+      <div class="grid"><input type="text" id="shareUrl" readonly><button id="shareCopy" class="pri">コピー</button><button id="shareClose">閉じる</button></div>
+      <p class="note">入力内容（ケースの一覧を除く）がすべて URL の「#」以降に入っている。この部分はサーバーに送られず、開いた人のブラウザ内だけで読み込まれる。</p>
     </div>
   </header>
 
@@ -143,9 +209,10 @@ details .note{margin-top:4px}
     <details class="note">
       <summary>入力の決まり</summary>
       <p class="note">出力（すき間）＝ Σ 係数 × 項目の値。すき間を大きくする寸法は係数 ＋1、小さくする寸法は −1。てこ比や角度で効き方が変わる場合は、その比を係数に入れる（例：0.5、−1.2）。下の許容差は符号付きで入れる。</p>
-      <p class="note">輪郭度など：公差値 t を ±t/2 のずれとして積む（面の輪郭度・平面度・直角度などを1方向のずれに換算）。</p>
+      <p class="note">輪郭度など：公差値 t を ±t/2 のずれとして積む（面の輪郭度・平面度・直角度などを1方向のずれに換算）。公差域を片側に寄せる指示（UZ）は、種類を「寸法」にして基準寸法 0、上下の許容差に片寄った値を入れる。</p>
       <p class="note">位置度：φt を ±t/2 として積む。Ⓜ を付けると、サイズの公差幅だけボーナス公差が加わる（最悪値は ±(t＋サイズ公差幅)/2）。統計計算ではサイズを公差の中央を中心とする正規分布、位置のずれを円内に一様（または正規）とみなす。</p>
-      <p class="note">組付けの遊び：穴と軸（ボルト）のすき間の範囲で一様にずれるとみなす。最悪値は ±(最大の穴 − 最小の軸)/2。データム穴の Ⓜ によるデータムシフトも、データム穴とピン（最大実体境界）の寸法を入れれば同じ扱いになる。</p>
+      <p class="note">組付けの遊び：穴と軸（ボルト）のすき間の範囲で一様にずれるとみなす（1方向。丸穴とピンでは実際より大きめに出る＝安全側）。治具で片側に寄せて組む場合は実態と合わない。</p>
+      <p class="note">Cpk指定：平均のずれ（公差中心からの平均の位置、符号付き）を入れると、σ ＝（半幅 − |ずれ|）/（3×Cpk）として計算する。ずれ 0 は工程が中心にある場合。</p>
     </details>
   </section>
 
@@ -186,17 +253,17 @@ details .note{margin-top:4px}
       <div><label for="mcn">モンテカルロの回数</label>
         <select id="mcn"><option value="0">行わない</option><option value="10000">1万回</option><option value="100000">10万回</option><option value="1000000">100万回</option></select></div>
     </div>
-    <p class="note">統計（±3σ）は、各項目の分布から求めた σ に感度係数を掛けて二乗和平方根をとったもの（全項目が正規分布なら従来の RSS と一致）。補正RSS は従来の RSS に 1.5 を掛けたもの（Bender）。モンテカルロは同じ入力なら同じ結果になるよう、乱数の種を固定している。</p>
+    <p class="note">モンテカルロは入力が止まってから別スレッドで計算する（入力中は表の値が「計算中」になる）。統計（±3σ）は、各項目の分布から求めた σ に感度係数を掛けて二乗和平方根をとったもの（全項目が正規分布なら従来の RSS と一致）。補正RSS は従来の RSS に 1.5 を掛けたもの（Bender）。乱数の種は固定している。</p>
   </section>
 
   <section class="card" id="sec-save">
-    <h2>保存</h2>
+    <h2>ファイルに保存</h2>
     <div class="row-actions" style="margin-top:0">
       <button id="exp">JSONで書き出し</button>
       <button id="imp">JSONを読み込む</button>
       <input type="file" id="file" accept="application/json,.json" hidden>
     </div>
-    <p class="note">入力内容はこの端末のブラウザに自動保存されます。</p>
+    <p class="note">入力内容とケースの一覧は、この端末のブラウザに自動保存される。</p>
   </section>
   </div>
 
@@ -208,11 +275,17 @@ details .note{margin-top:4px}
   </section>
 
   <div class="figs">
-  <section class="card fig only-1d" id="sec-cfig">
-    <h2>寸法チェーン図</h2>
-    <p class="hint">○を左右にドラッグすると基準寸法が変わる。矢印をタップすると係数の符号が反転する。</p>
-    <div id="chainFig" class="dragzone"></div>
-    <p class="note">寸法の項目だけを描く（幾何公差と組付けの遊びは基準値が 0 のため図に出ない）。</p>
+  <section class="card fig only-1d" id="sec-bfig">
+    <h2>積み上げブロック図</h2>
+    <div class="palette" id="palette">
+      <button class="chip p" data-pal="pos">＋ 寸法（広げる側）</button>
+      <button class="chip n" data-pal="neg">− 寸法（狭める側）</button>
+      <button class="chip g" data-pal="prof">輪郭度など</button>
+      <button class="chip g" data-pal="posit">位置度</button>
+      <button class="chip g" data-pal="float">組付けの遊び</button>
+    </div>
+    <p class="hint">部品をドラッグして図に置くと追加される（押すだけなら末尾に追加）。ブロックは左右で並べ替え、上下の段へ移すと係数の符号が反転する。右端の○で基準寸法、下の内訳の行で公差、緑の線で規格を変えられる。ブロックを押すと入力欄に移る。</p>
+    <div id="blockFig" class="dragzone"></div>
   </section>
 
   <section class="card fig only-2d" id="sec-vfig">
@@ -232,7 +305,6 @@ details .note{margin-top:4px}
     <p class="hint">緑の規格線を左右にドラッグすると、下限・上限が変わる。</p>
     <div id="distFig1" class="dragzone"></div>
   </section>
-  </div>
 
   <section class="card contrib" id="sec-contrib">
     <h2>寄与率</h2>
@@ -241,10 +313,31 @@ details .note{margin-top:4px}
     <div id="contrib" class="dragzone"></div>
   </section>
   </div>
-</main>
 
-<script>
+  <section class="card" id="sec-alloc">
+    <h2>必要な公差の逆算</h2>
+    <div class="grid2">
+      <div><label for="atype">目標</label>
+        <select id="atype"><option value="cpk">出力の Cpk（正規近似）</option><option value="wc">ワーストケースで規格内</option></select></div>
+      <div id="acpkBox"><label for="acpk">目標の Cpk</label><input type="number" id="acpk" step="0.01" min="0.1"></div>
+    </div>
+    <div id="allocBox"></div>
+  </section>
+
+  <section class="card" id="sec-cases">
+    <h2>ケースの比較</h2>
+    <div class="casebar"><input type="text" id="caseName" placeholder="ケース名（例：対策前、案A）"><button id="caseSave" class="pri">現在の入力を保存</button></div>
+    <div id="casesBox"></div>
+  </section>
+  </div>
+</main>
+<div id="ghost"></div>
+<div id="report"></div>
+
+<script id="engine-src">
 /*ENGINE*/
+</script>
+<script>
 /*UI*/
 </script>
 </body>
