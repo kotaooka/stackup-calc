@@ -146,6 +146,8 @@ node tests/cases.js
 python tests/verify.py
 ```
 
+プッシュすると GitHub Actions（`.github/workflows/test.yml`）で同じ手順が自動で実行され、`docs/index.html` がビルド結果と一致しているかも確認される。
+
 ---
 
 ## ライセンス
