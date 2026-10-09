@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>公差積み上げ計算</title>
+<meta name="description" content="ワーストケース・統計（RSS）・補正RSS・モンテカルロで寸法チェーンを評価する公差積み上げ計算。1次元（感度係数・幾何公差）と2次元ベクトルループに対応">
+<link rel="canonical" href="https://kotaooka.github.io/stackup-calc/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QC Workbench">
+<meta property="og:title" content="公差積み上げ計算｜ワーストケース・RSS・モンテカルロ">
+<meta property="og:description" content="ワーストケース・統計（RSS）・補正RSS・モンテカルロで寸法チェーンを評価する公差積み上げ計算。1次元（感度係数・幾何公差）と2次元ベクトルループに対応">
+<meta property="og:url" content="https://kotaooka.github.io/stackup-calc/">
+<meta property="og:image" content="https://kotaooka.github.io/stackup-calc/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="公差積み上げ計算：ワーストケース、RSS、モンテカルロ、幾何公差、2次元ベクトルループ">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 :root{
   --bg:#f6f7f9;--card:#fff;--fg:#1d2329;--sub:#5b6670;--line:#d9dee3;
@@ -27,6 +40,9 @@ header{order:0}#sec-items,#sec-vecs{order:1}#sec-set2{order:2}#sec-spec{order:3}
 /* モードによる表示切り替え */
 body.m1d .only-2d,body.m2d .only-1d{display:none!important}
 h1{font-size:20px;margin:4px 0 2px}
+/* QC Workbench へ戻るリンク */
+.home{font-size:12px;color:var(--sub);text-decoration:none}
+.home:hover{color:var(--acc);text-decoration:underline}
 .lead{color:var(--sub);font-size:13px;margin:0 0 10px}
 .toolbar{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap;align-items:center}
 .toolbar .sp{flex:1}
@@ -172,6 +188,7 @@ table.tb button{white-space:nowrap}
 <body class="m1d">
 <main>
   <header>
+    <a class="home" href="https://kotaooka.github.io/" title="QC Workbench（ツール一覧）へ戻る">QC Workbench ›</a>
     <h1>公差積み上げ計算</h1>
     <p class="lead">ワーストケース・統計（RSS）・補正RSS・モンテカルロで寸法チェーンを評価します。単位は mm と °。計算は端末内だけで行います。</p>
     <div class="toolbar">
