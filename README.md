@@ -145,3 +145,9 @@ python tools/build.py
 node tests/cases.js
 python tests/verify.py
 ```
+
+---
+
+## ライセンス
+
+[MIT License](LICENSE)
