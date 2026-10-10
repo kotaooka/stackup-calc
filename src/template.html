@@ -17,6 +17,10 @@
 <meta property="og:image:alt" content="公差積み上げ計算：ワーストケース、RSS、モンテカルロ、幾何公差、2次元ベクトルループ">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
+<script>
+  // 保存したテーマ（auto / light / dark）を描画前に当てる
+  try { const t = localStorage.getItem("stackup-calc-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) { /* 保存できない環境 */ }
+</script>
 <style>
 :root{
   --bg:#f6f7f9;--card:#fff;--fg:#1d2329;--sub:#5b6670;--line:#d9dee3;
@@ -28,27 +32,42 @@
     --acc:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--ng:#f87171;--bar1:#60a5fa;--bar2:#64748b;--pur:#a78bfa;
   }
 }
+:root[data-theme="dark"]{
+  --bg:#111418;--card:#1a1f25;--fg:#e6e9ec;--sub:#9aa5af;--line:#2d343c;
+  --acc:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--ng:#f87171;--bar1:#60a5fa;--bar2:#64748b;--pur:#a78bfa;
+  color-scheme:dark;
+}
 *{box-sizing:border-box}
+/* 固定ヘッダーに隠れないよう、入力欄へ移動したときに上を空ける */
+.card,.it{scroll-margin-top:120px}
 body{margin:0;background:var(--bg);color:var(--fg);
   font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px;line-height:1.5}
 main{max-width:860px;margin:0 auto;padding:16px;display:flex;flex-direction:column}
 /* 狭い画面では列の囲みを無効にし、order で縦の並び順を決める */
 .col-l,.col-r,.figs{display:contents}
-header{order:0}#sec-items,#sec-vecs{order:1}#sec-set2{order:2}#sec-spec{order:3}#sec-res{order:4}
+.intro{order:0}#sec-items,#sec-vecs{order:1}#sec-set2{order:2}#sec-spec{order:3}#sec-res{order:4}
 #sec-bfig,#sec-vfig{order:5}#sec-dfig0{order:6}#sec-dfig1{order:7}#sec-contrib{order:8}#sec-alloc{order:9}
 #sec-cases{order:10}#sec-calc{order:11}#sec-save{order:12}
 /* モードによる表示切り替え */
 body.m1d .only-2d,body.m2d .only-1d{display:none!important}
-h1{font-size:20px;margin:4px 0 2px}
-/* QC Workbench へ戻るリンク */
-.home{font-size:12px;color:var(--sub);text-decoration:none}
-.home:hover{color:var(--acc);text-decoration:underline}
+/* 上部ヘッダー（QC Workbench のツール共通：戻るリンク・名前・テーマ切替・タブ） */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:12px 0}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand h1{font-size:1.15rem;margin:0;letter-spacing:.02em}
+.brand .std{font-size:.78rem;color:var(--sub)}
+.brand .home{font-size:.78rem;color:var(--sub);text-decoration:none;margin-right:-6px}
+.brand .home:hover{color:var(--acc);text-decoration:underline}
+.brand .crumb{font-size:.78rem;color:var(--sub);margin-right:-6px}
+.brand .theme{margin-left:auto}
+nav.tabs{display:flex;gap:4px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto;border:0;border-radius:0;background:none;color:var(--sub);font-size:.92rem;padding:8px 12px 10px;cursor:pointer;border-bottom:3px solid transparent}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--acc);font-weight:700}
+nav.tabs button:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
 .lead{color:var(--sub);font-size:13px;margin:0 0 10px}
 .toolbar{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap;align-items:center}
 .toolbar .sp{flex:1}
-.tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tabs button{border-radius:999px;padding:6px 14px}
-.tabs button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
 button:disabled{opacity:.4;cursor:default}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
 h2{font-size:15px;margin:0 0 10px}
@@ -152,7 +171,8 @@ table.tb button{white-space:nowrap}
 /* PC（横1200px以上）：左に入力、右に結果と図の2列 */
 @media (min-width:1200px){
   main{max-width:1800px;display:grid;grid-template-columns:minmax(700px,760px) minmax(0,1fr);column-gap:16px;align-items:start}
-  header{grid-column:1/3}
+  .top-in{max-width:1800px}
+  .intro{grid-column:1/3}
   .col-l,.col-r{display:block}
   .contrib .item{grid-template-columns:11em 1fr 7.5em}
   /* 入力の行を横1行に並べる（名称・種類・係数・分布・値3つ・削除） */
@@ -173,7 +193,7 @@ table.tb button{white-space:nowrap}
     --acc:#1d4ed8;--ok:#15803d;--warn:#b45309;--ng:#b91c1c;--bar1:#1d4ed8;--bar2:#94a3b8;--pur:#6d28d9;
   }
   body{background:#fff;font-size:10.5pt}
-  main,#ghost{display:none!important}
+  main,#ghost,header.top{display:none!important}
   #report{display:block}
   #report h1{font-size:16pt;margin:0 0 2mm}
   #report h2{font-size:12pt;margin:5mm 0 2mm;border-bottom:1px solid #999}
@@ -186,19 +206,26 @@ table.tb button{white-space:nowrap}
 </style>
 </head>
 <body class="m1d">
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <a class="home" href="https://kotaooka.github.io/" title="QC Workbench（ツール一覧）へ戻る">QC Workbench</a><span class="crumb" aria-hidden="true">›</span><h1>公差積み上げ計算</h1>
+      <span class="std">ワーストケース・RSS・補正RSS・モンテカルロ</span>
+      <button class="sm theme" id="themeBtn" type="button" aria-label="表示テーマを切り替え">表示：自動</button>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="計算の種類">
+      <button role="tab" id="tab1d" type="button" aria-selected="true">1次元（感度係数・幾何公差）</button>
+      <button role="tab" id="tab2d" type="button" aria-selected="false">2次元ベクトルループ</button>
+    </nav>
+  </div>
+</header>
 <main>
-  <header>
-    <a class="home" href="https://kotaooka.github.io/" title="QC Workbench（ツール一覧）へ戻る">QC Workbench ›</a>
-    <h1>公差積み上げ計算</h1>
+  <div class="intro">
     <p class="lead">ワーストケース・統計（RSS）・補正RSS・モンテカルロで寸法チェーンを評価します。単位は mm と °。計算は端末内だけで行います。</p>
     <div class="toolbar">
-      <div class="tabs" role="group" aria-label="計算の種類">
-        <button id="tab1d" aria-pressed="true">1次元（感度係数・幾何公差）</button>
-        <button id="tab2d" aria-pressed="false">2次元ベクトルループ</button>
-      </div>
-      <span class="sp"></span>
       <button id="undo" title="元に戻す（Ctrl+Z）" disabled>↶ 元に戻す</button>
       <button id="redo" title="やり直す（Ctrl+Y）" disabled>↷ やり直す</button>
+      <span class="sp"></span>
       <button id="share">共有URL</button>
       <button id="print">レポート印刷</button>
     </div>
@@ -207,7 +234,7 @@ table.tb button{white-space:nowrap}
       <div class="grid"><input type="text" id="shareUrl" readonly><button id="shareCopy" class="pri">コピー</button><button id="shareClose">閉じる</button></div>
       <p class="note">入力内容（ケースの一覧を除く）がすべて URL の「#」以降に入っている。この部分はサーバーに送られず、開いた人のブラウザ内だけで読み込まれる。</p>
     </div>
-  </header>
+  </div>
 
   <div class="col-l">
   <section class="card only-1d" id="sec-items">

@@ -231,8 +231,8 @@ function syncSettings(){
   $('atype').value = state.alloc.type; set('acpk', state.alloc.cpk);
   $('acpkBox').style.visibility = state.alloc.type === 'wc' ? 'hidden' : 'visible';
   document.body.className = state.mode === '1d' ? 'm1d' : 'm2d';
-  $('tab1d').setAttribute('aria-pressed', state.mode === '1d');
-  $('tab2d').setAttribute('aria-pressed', state.mode === '2d');
+  $('tab1d').setAttribute('aria-selected', state.mode === '1d');
+  $('tab2d').setAttribute('aria-selected', state.mode === '2d');
 }
 // 入力欄の値を状態に合わせる（作り直さずに値だけ入れ替える。ドラッグ中に使う）
 function syncInputs(){
@@ -296,6 +296,21 @@ $('specBox').addEventListener('input', e => {
 $('mcn').onchange = () => { state.n = Number($('mcn').value); save(); commit(); calc(); };
 $('tab1d').onclick = () => { state.mode = '1d'; save(); commit(); syncSettings(); renderSpec(); calc(); };
 $('tab2d').onclick = () => { state.mode = '2d'; save(); commit(); syncSettings(); renderSpec(); calc(); };
+// 表示テーマ（自動 / ライト / ダーク）。図は CSS 変数で描いているので描き直しは不要
+{
+  const THEMES = ['auto', 'light', 'dark'], LABEL = {auto: '表示：自動', light: '表示：ライト', dark: '表示：ダーク'};
+  let theme = document.documentElement.dataset.theme || 'auto';
+  const applyTheme = t => {
+    if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t;
+    $('themeBtn').textContent = LABEL[t];
+  };
+  $('themeBtn').onclick = () => {
+    theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    try { localStorage.setItem('stackup-calc-theme', theme); } catch (e) { /* 保存できなくても切り替えは効く */ }
+    applyTheme(theme);
+  };
+  applyTheme(theme);
+}
 $('atype').onchange = () => { state.alloc.type = $('atype').value; save(); commit(); syncSettings(); renderAlloc(); };
 $('acpk').addEventListener('input', () => { const v = Number($('acpk').value); if (v > 0) { state.alloc.cpk = v; save(); commitLater(); renderAlloc(); } });
 
