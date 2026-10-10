@@ -1,6 +1,6 @@
 // 公差積み上げ計算の Service Worker（docs/ が公開の対象）
 // 公開ファイルを更新したら VERSION を上げる。古いキャッシュは activate 時に削除される
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.0.1';
 const APP_CACHE = `stackup-calc-${VERSION}`;
 const FONT_CACHE = 'stackup-calc-fonts';
 

@@ -299,16 +299,27 @@ $('tab2d').onclick = () => { state.mode = '2d'; save(); commit(); syncSettings()
 // 表示テーマ（自動 / ライト / ダーク）。図は CSS 変数で描いているので描き直しは不要
 {
   const THEMES = ['auto', 'light', 'dark'], LABEL = {auto: '表示：自動', light: '表示：ライト', dark: '表示：ダーク'};
-  let theme = document.documentElement.dataset.theme || 'auto';
+  // 表示テーマは QC Workbench の全ツールで共通のキーに保存する（旧キーの値は最初の1回だけ引き継ぐ）
+  const THEME_KEY = 'qc-workbench-theme', OLD_THEME_KEY = 'stackup-calc-theme';
+  const readTheme = () => {
+    try {
+      let t = localStorage.getItem(THEME_KEY);
+      if (t == null) { t = localStorage.getItem(OLD_THEME_KEY); if (THEMES.includes(t)) localStorage.setItem(THEME_KEY, t); }
+      return THEMES.includes(t) ? t : 'auto';
+    } catch (e) { return 'auto'; }
+  };
+  let theme = readTheme();
   const applyTheme = t => {
     if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t;
     $('themeBtn').textContent = LABEL[t];
   };
   $('themeBtn').onclick = () => {
     theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
-    try { localStorage.setItem('stackup-calc-theme', theme); } catch (e) { /* 保存できなくても切り替えは効く */ }
+    try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* 保存できなくても切り替えは効く */ }
     applyTheme(theme);
   };
+  // 別のタブや別のツールで切り替えたら、このページにも反映する
+  window.addEventListener('storage', e => { if (e.key === THEME_KEY || e.key === null) { theme = readTheme(); applyTheme(theme); } });
   applyTheme(theme);
 }
 $('atype').onchange = () => { state.alloc.type = $('atype').value; save(); commit(); syncSettings(); renderAlloc(); };
