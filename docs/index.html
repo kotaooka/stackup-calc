@@ -17,31 +17,40 @@
 <meta property="og:image:alt" content="公差積み上げ計算：ワーストケース、RSS、モンテカルロ、幾何公差、2次元ベクトルループ">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1d5c96" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11161b" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <script>
   // 保存したテーマ（auto / light / dark）を描画前に当てる
   try { const t = localStorage.getItem("stackup-calc-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) { /* 保存できない環境 */ }
 </script>
 <style>
 :root{
-  --bg:#f6f7f9;--card:#fff;--fg:#1d2329;--sub:#5b6670;--line:#d9dee3;
-  --acc:#2563eb;--ok:#15803d;--warn:#b45309;--ng:#b91c1c;--bar1:#2563eb;--bar2:#94a3b8;--pur:#7c3aed;
+  /* 色・字体は cpk-calc / sampling-calc / msa-calc / logit-calc / deltae-calc と共通 */
+  --bg:#eef1f4;--card:#ffffff;--fg:#15212c;--sub:#475563;--line:#d5dce3;
+  --acc:#1d5c96;--acc-ink:#ffffff;--ok:#17703a;--warn:#8a5300;--ng:#ad2a22;--bar1:#1d5c96;--bar2:#94a3b8;--pur:#8c5bd6;
+  --f-ui:"BIZ UDPGothic","Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,"Consolas",monospace;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#111418;--card:#1a1f25;--fg:#e6e9ec;--sub:#9aa5af;--line:#2d343c;
-    --acc:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--ng:#f87171;--bar1:#60a5fa;--bar2:#64748b;--pur:#a78bfa;
+    --bg:#11161b;--card:#19212a;--fg:#e6ecf2;--sub:#a9b5c1;--line:#2b3641;
+    --acc:#6ba6df;--acc-ink:#0d1620;--ok:#57c483;--warn:#e3a84e;--ng:#f07a70;--bar1:#6ba6df;--bar2:#64748b;--pur:#a07ae0;
+    color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#111418;--card:#1a1f25;--fg:#e6e9ec;--sub:#9aa5af;--line:#2d343c;
-  --acc:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--ng:#f87171;--bar1:#60a5fa;--bar2:#64748b;--pur:#a78bfa;
+  --bg:#11161b;--card:#19212a;--fg:#e6ecf2;--sub:#a9b5c1;--line:#2b3641;
+  --acc:#6ba6df;--acc-ink:#0d1620;--ok:#57c483;--warn:#e3a84e;--ng:#f07a70;--bar1:#6ba6df;--bar2:#64748b;--pur:#a07ae0;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 /* 固定ヘッダーに隠れないよう、入力欄へ移動したときに上を空ける */
 .card,.it{scroll-margin-top:120px}
 body{margin:0;background:var(--bg);color:var(--fg);
-  font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px;line-height:1.5}
+  font-family:var(--f-ui);font-size:15px;line-height:1.5}
 main{max-width:860px;margin:0 auto;padding:16px;display:flex;flex-direction:column}
 /* 狭い画面では列の囲みを無効にし、order で縦の並び順を決める */
 .col-l,.col-r,.figs{display:contents}
@@ -73,10 +82,10 @@ button:disabled{opacity:.4;cursor:default}
 h2{font-size:15px;margin:0 0 10px}
 input,select,button{font:inherit;color:inherit}
 input[type=text],input[type=number],select{width:100%;padding:6px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);min-width:0}
-input[type=number]{text-align:right}
+input[type=number]{text-align:right;font-family:var(--f-num)}
 input.bad{border-color:var(--ng)}
 button{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 12px;cursor:pointer}
-button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
 button.sm{padding:3px 9px;font-size:13px}
 button.x{padding:4px 9px;color:var(--sub)}
 .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -120,7 +129,7 @@ table.res .sub{font-size:12px;font-weight:400;color:var(--sub)}
 .bars{display:flex;flex-direction:column;gap:2px}
 .bar{height:8px;border-radius:4px;background:var(--bar1);min-width:1px}
 .bar.b2{background:var(--bar2)}
-.num{font-variant-numeric:tabular-nums;text-align:right;color:var(--sub)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;text-align:right;color:var(--sub)}
 .legend{font-size:12px;color:var(--sub);display:flex;gap:14px;margin-bottom:4px;flex-wrap:wrap}
 .legend i{display:inline-block;width:10px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
 .err{color:var(--ng);font-size:13px;margin-top:6px}
@@ -190,7 +199,7 @@ table.tb button{white-space:nowrap}
 @media print{
   :root,:root:not([data-theme="light"]){
     --bg:#fff;--card:#fff;--fg:#000;--sub:#444;--line:#bbb;
-    --acc:#1d4ed8;--ok:#15803d;--warn:#b45309;--ng:#b91c1c;--bar1:#1d4ed8;--bar2:#94a3b8;--pur:#6d28d9;
+    --acc:#1d5c96;--acc-ink:#ffffff;--ok:#17703a;--warn:#8a5300;--ng:#ad2a22;--bar1:#1d5c96;--bar2:#94a3b8;--pur:#6d3fb8;
   }
   body{background:#fff;font-size:10.5pt}
   main,#ghost,header.top{display:none!important}
