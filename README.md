@@ -106,6 +106,7 @@
 | レポート印刷 | 印刷用レイアウトで出力する。ブラウザの印刷で「PDF に保存」を選べば PDF になる |
 | JSON で書き出し／読み込み | 入力をファイルに保存・復元する |
 | 自動保存 | 入力内容とケース一覧はこの端末のブラウザに自動で保存される |
+| オフライン・アプリとして使う | 一度開けば、通信がなくても使える。スマホは「ホーム画面に追加」、PC の Chrome・Edge はアドレスバーの「インストール」でアプリとして起動できる |
 | モンテカルロの回数 | 「計算の設定」で 1万〜100万回から選ぶ。乱数の種は固定なので、同じ入力なら同じ結果になる |
 
 ---
@@ -134,7 +135,12 @@ tools/build.py    src/ をまとめて docs/index.html を生成
 tests/
   cases.js        例題をエンジンで計算して tests/out.json に書き出す
   verify.py       結果を Python で独立に計算し直して照合する（ワーストケースの総当たり、判定、逆算の境界を含む）
+tools/screenshots.py  docs/images/ を撮り直す
+tools/make_icons.py   docs/icons/ を作る
 docs/index.html   ビルド結果（GitHub Pages の公開対象）
+docs/sw.js        Service Worker（オフライン用のキャッシュ）
+docs/manifest.webmanifest  PWA の設定
+docs/icons/       アプリのアイコン
 docs/images/      README 用のスクリーンショット
 ```
 
@@ -144,6 +150,24 @@ docs/images/      README 用のスクリーンショット
 python tools/build.py
 node tests/cases.js
 python tests/verify.py
+```
+
+公開するファイル（`docs/` の中）を変えたら、`docs/sw.js` の `VERSION` を上げる（上げないと、インストール済みの PWA に古い版が残る）。公開するファイルを増やしたら `ASSETS` にも足す。
+
+### 画像の作り直し
+
+スクリーンショットは Google Fonts が読めない環境でも日本語字形で写るよう、fontsource のローカルファイルに差し替えて撮る（読めていなければ中断する）。例題を読み込んだ状態をダーク表示・1440×900・1.5 倍で撮影する。
+
+```powershell
+# 任意の作業フォルダで
+npm pack @fontsource/biz-udpgothic @fontsource/ibm-plex-mono
+Get-ChildItem *.tgz | ForEach-Object { tar -xzf $_.Name --one-top-level }
+pip install playwright pillow
+python -m playwright install chromium
+# リポジトリのフォルダで
+python tools/build.py
+python tools/screenshots.py <フォント展開先フォルダ>
+python tools/make_icons.py
 ```
 
 プッシュすると GitHub Actions（`.github/workflows/test.yml`）で同じ手順が自動で実行され、`docs/index.html` がビルド結果と一致しているかも確認される。

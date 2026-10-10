@@ -19,6 +19,10 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#1d5c96" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#11161b" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="公差積み上げ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -392,6 +396,26 @@ table.tb button{white-space:nowrap}
 </script>
 <script>
 /*UI*/
+</script>
+<script>
+// オフラインで使えるように Service Worker を登録（https か localhost のときだけ。埋め込み表示では登録しない）
+(() => {
+  const embedded = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+  if (embedded || !('serviceWorker' in navigator)) return;
+  if (!(location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) return;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const w = reg.installing;
+        if (!w) return;
+        w.addEventListener('statechange', () => {
+          // 既存版が動いている状態で新版が入ったときだけ知らせる
+          if (w.state === 'installed' && navigator.serviceWorker.controller) notice('新しい版を取り込んだ。開き直すと反映される。');
+        });
+      });
+    }).catch(() => { /* 登録できなくても計算には影響しない */ });
+  });
+})();
 </script>
 </body>
 </html>
