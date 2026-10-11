@@ -18,3 +18,5 @@ jobs:
         run: node tests/cases.js
       - name: 計算結果の独立検算
         run: python tests/verify.py
+      - name: 解析解との照合
+        run: node tests/analytic.js
