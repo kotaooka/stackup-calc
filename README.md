@@ -1,8 +1,8 @@
-# stackup-calc
+# 公差積み上げ計算（stackup-calc）
 
-公差の積み上げ（スタックアップ）をブラウザだけで計算する Web アプリ。インストール不要で、計算は端末内で完結し、入力したデータは外部に送信しない。画面の字体（BIZ UDPゴシック・IBM Plex Mono）は Google Fonts から読み込むため、開いたときに Google のサーバーへ接続する（入力したデータは送らない）。
+公差の積み上げ（スタックアップ）をブラウザだけで計算する Web ツールです。インストールは不要で、計算は端末内で完結し、入力したデータは外部に送信しません。画面の字体（BIZ UDPゴシック・IBM Plex Mono）は Google Fonts から読み込むため、開いたときに Google のサーバーへ接続します（入力したデータは送りません）。
 
-**▶ すぐ使う：<https://kotaooka.github.io/stackup-calc/>**
+**https://kotaooka.github.io/stackup-calc/**
 
 ![画面全体（1次元・例題を読み込んだ状態）](docs/images/overview.png)
 
