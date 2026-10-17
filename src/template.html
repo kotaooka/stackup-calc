@@ -172,6 +172,9 @@ table.tb button{white-space:nowrap}
 .casebar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-bottom:8px}
 /* 印刷用レポート（画面では非表示） */
 #report{display:none}
+.foot{max-width:860px;margin:0 auto;padding:4px 16px 24px;font-size:.78rem;color:var(--sub)}
+.foot a{color:inherit}
+.foot .support a{white-space:nowrap}
 @media (max-width:600px){
   .it-h{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}
   .it-h .x{grid-column:3;grid-row:1;align-self:end}
@@ -206,7 +209,7 @@ table.tb button{white-space:nowrap}
     --acc:#1d5c96;--acc-ink:#ffffff;--ok:#17703a;--warn:#8a5300;--ng:#ad2a22;--bar1:#1d5c96;--bar2:#94a3b8;--pur:#6d3fb8;
   }
   body{background:#fff;font-size:10.5pt}
-  main,#ghost,header.top{display:none!important}
+  main,#ghost,header.top,.foot{display:none!important}
   #report{display:block}
   #report h1{font-size:16pt;margin:0 0 2mm}
   #report h2{font-size:12pt;margin:5mm 0 2mm;border-bottom:1px solid #999}
@@ -388,6 +391,7 @@ table.tb button{white-space:nowrap}
   </section>
   </div>
 </main>
+<footer class="foot"><a href="https://github.com/kotaooka/stackup-calc">GitHub</a> ・ MIT License<span class="support"> ・ <a href="https://buymeacoffee.com/kotaooka" target="_blank" rel="noopener"><span aria-hidden="true">☕</span> 開発を応援する（Buy Me a Coffee）</a></span></footer>
 <div id="ghost"></div>
 <div id="report"></div>
 
