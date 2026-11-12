@@ -53,7 +53,7 @@
 *{box-sizing:border-box}
 /* 固定ヘッダーに隠れないよう、入力欄へ移動したときに上を空ける */
 .card,.it{scroll-margin-top:120px}
-body{margin:0;background:var(--bg);color:var(--fg);
+body{text-autospace:normal;margin:0;background:var(--bg);color:var(--fg);
   font-family:var(--f-ui);font-size:15px;line-height:1.5}
 main{max-width:860px;margin:0 auto;padding:16px;display:flex;flex-direction:column}
 /* 狭い画面では列の囲みを無効にし、order で縦の並び順を決める */
@@ -237,7 +237,7 @@ table.tb button{white-space:nowrap}
 </header>
 <main>
   <div class="intro">
-    <p class="lead">ワーストケース・統計（RSS）・補正RSS・モンテカルロで寸法チェーンを評価します。単位は mm と °。計算は端末内だけで行います。</p>
+    <p class="lead">ワーストケース・統計（RSS）・補正RSS・モンテカルロで寸法チェーンを評価します。単位はmmと °。計算は端末内だけで行います。</p>
     <div class="toolbar">
       <button id="undo" title="元に戻す（Ctrl+Z）" disabled>↶ 元に戻す</button>
       <button id="redo" title="やり直す（Ctrl+Y）" disabled>↷ やり直す</button>
@@ -248,7 +248,7 @@ table.tb button{white-space:nowrap}
     <div id="notice"><span id="noticeText"></span><button class="sm" id="noticeClose">閉じる</button></div>
     <div id="sharePanel" class="card" hidden>
       <div class="grid"><input type="text" id="shareUrl" readonly><button id="shareCopy" class="pri">コピー</button><button id="shareClose">閉じる</button></div>
-      <p class="note">入力内容（ケースの一覧を除く）がすべて URL の「#」以降に入っている。この部分はサーバーに送られず、開いた人のブラウザ内だけで読み込まれる。</p>
+      <p class="note">入力内容（ケースの一覧を除く）がすべてURLの「#」以降に入っている。この部分はサーバーに送られず、開いた人のブラウザ内だけで読み込まれる。</p>
     </div>
   </div>
 
@@ -268,11 +268,11 @@ table.tb button{white-space:nowrap}
     </div>
     <details class="note">
       <summary>入力の決まり</summary>
-      <p class="note">出力（すき間）＝ Σ 係数 × 項目の値。すき間を大きくする寸法は係数 ＋1、小さくする寸法は −1。てこ比や角度で効き方が変わる場合は、その比を係数に入れる（例：0.5、−1.2）。下の許容差は符号付きで入れる。</p>
-      <p class="note">輪郭度など：公差値 t を ±t/2 のずれとして積む（面の輪郭度・平面度・直角度などを1方向のずれに換算）。公差域を片側に寄せる指示（UZ）は、種類を「寸法」にして基準寸法 0、上下の許容差に片寄った値を入れる。</p>
-      <p class="note">位置度：φt を ±t/2 として積む。Ⓜ を付けると、サイズの公差幅だけボーナス公差が加わる（最悪値は ±(t＋サイズ公差幅)/2）。統計計算ではサイズを公差の中央を中心とする正規分布、位置のずれを円内に一様（または正規）とみなす。</p>
+      <p class="note">出力（すき間）＝ Σ係数 × 項目の値。すき間を大きくする寸法は係数 ＋1、小さくする寸法は −1。てこ比や角度で効き方が変わる場合は、その比を係数に入れる（例：0.5、−1.2）。下の許容差は符号付きで入れる。</p>
+      <p class="note">輪郭度など：公差値tを ±t/2のずれとして積む（面の輪郭度・平面度・直角度などを1方向のずれに換算）。公差域を片側に寄せる指示（UZ）は、種類を「寸法」にして基準寸法0、上下の許容差に片寄った値を入れる。</p>
+      <p class="note">位置度：φtを ±t/2として積む。Ⓜ を付けると、サイズの公差幅だけボーナス公差が加わる（最悪値は ±(t＋サイズ公差幅)/2）。統計計算ではサイズを公差の中央を中心とする正規分布、位置のずれを円内に一様（または正規）とみなす。</p>
       <p class="note">組付けの遊び：穴と軸（ボルト）のすき間の範囲で一様にずれるとみなす（1方向。丸穴とピンでは実際より大きめに出る＝安全側）。治具で片側に寄せて組む場合は実態と合わない。</p>
-      <p class="note">Cpk指定：平均のずれ（公差中心からの平均の位置、符号付き）を入れると、σ ＝（半幅 − |ずれ|）/（3×Cpk）として計算する。ずれ 0 は工程が中心にある場合。</p>
+      <p class="note">Cpk指定：平均のずれ（公差中心からの平均の位置、符号付き）を入れると、σ ＝（半幅 − |ずれ|）/（3×Cpk）として計算する。ずれ0は工程が中心にある場合。</p>
     </details>
   </section>
 
@@ -286,7 +286,7 @@ table.tb button{white-space:nowrap}
     </div>
     <details class="note">
       <summary>入力の決まり</summary>
-      <p class="note">原点からベクトルを順につなぐ。角度は x 軸から反時計回り（°）。「前から」を選ぶと、前のベクトルの向きからの相対角度になる。</p>
+      <p class="note">原点からベクトルを順につなぐ。角度はx軸から反時計回り（°）。「前から」を選ぶと、前のベクトルの向きからの相対角度になる。</p>
       <p class="note">出力1は、目標点から見た終点の「測定方向」成分（すき間など）、出力2はそれと直交する成分（段差など）。感度係数は中心値のまわりで数値微分して求め、ワーストケースと統計はその線形近似で、モンテカルロは非線形のまま計算する。</p>
     </details>
   </section>
@@ -295,8 +295,8 @@ table.tb button{white-space:nowrap}
     <h2>出力の設定</h2>
     <div class="set">
       <div><label for="phi">測定方向（°）</label><input type="number" id="phi" step="any"></div>
-      <div><label for="tx">目標点 x</label><input type="number" id="tx" step="any"></div>
-      <div><label for="ty">目標点 y</label><input type="number" id="ty" step="any"></div>
+      <div><label for="tx">目標点x</label><input type="number" id="tx" step="any"></div>
+      <div><label for="ty">目標点y</label><input type="number" id="ty" step="any"></div>
       <div><label for="on0">出力1の名前</label><input type="text" id="on0"></div>
       <div><label for="on1">出力2の名前</label><input type="text" id="on1"></div>
     </div>
@@ -313,7 +313,7 @@ table.tb button{white-space:nowrap}
       <div><label for="mcn">モンテカルロの回数</label>
         <select id="mcn"><option value="0">行わない</option><option value="10000">1万回</option><option value="100000">10万回</option><option value="1000000">100万回</option></select></div>
     </div>
-    <p class="note">モンテカルロは入力が止まってから別スレッドで計算する（入力中は表の値が「計算中」になる）。統計（±3σ）は、各項目の分布から求めた σ に感度係数を掛けて二乗和平方根をとったもの（全項目が正規分布なら従来の RSS と一致）。補正RSS は従来の RSS に 1.5 を掛けたもの（Bender）。乱数の種は固定している。</p>
+    <p class="note">モンテカルロは入力が止まってから別スレッドで計算する（入力中は表の値が「計算中」になる）。統計（±3σ）は、各項目の分布から求めたσに感度係数を掛けて二乗和平方根をとったもの（全項目が正規分布なら従来のRSSと一致）。補正RSSは従来のRSSに1.5を掛けたもの（Bender）。乱数の種は固定している。</p>
   </section>
 
   <section class="card" id="sec-save">
@@ -378,8 +378,8 @@ table.tb button{white-space:nowrap}
     <h2>必要な公差の逆算</h2>
     <div class="grid2">
       <div><label for="atype">目標</label>
-        <select id="atype"><option value="cpk">出力の Cpk（正規近似）</option><option value="wc">ワーストケースで規格内</option></select></div>
-      <div id="acpkBox"><label for="acpk">目標の Cpk</label><input type="number" id="acpk" step="0.01" min="0.1"></div>
+        <select id="atype"><option value="cpk">出力のCpk（正規近似）</option><option value="wc">ワーストケースで規格内</option></select></div>
+      <div id="acpkBox"><label for="acpk">目標のCpk</label><input type="number" id="acpk" step="0.01" min="0.1"></div>
     </div>
     <div id="allocBox"></div>
   </section>

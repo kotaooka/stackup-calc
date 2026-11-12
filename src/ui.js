@@ -18,8 +18,8 @@ const FIG = {};      // 直前に描いた図の座標系（ドラッグ位置�
 const SAMPLE1 = {
   items: [
     {type:'dim',  name:'ハウジング内幅', nom:50,  up:0.10, lo:-0.10, coef:1,  dist:'normal'},
-    {type:'dim',  name:'部品A 幅',       nom:20,  up:0.05, lo:-0.05, coef:-1, dist:'normal'},
-    {type:'dim',  name:'部品B 幅',       nom:20,  up:0.05, lo:-0.05, coef:-1, dist:'normal'},
+    {type:'dim',  name:'部品A幅',       nom:20,  up:0.05, lo:-0.05, coef:-1, dist:'normal'},
+    {type:'dim',  name:'部品B幅',       nom:20,  up:0.05, lo:-0.05, coef:-1, dist:'normal'},
     {type:'dim',  name:'スペーサ 厚さ',   nom:9.5, up:0.00, lo:-0.08, coef:-1, dist:'cpk', cpk:1.33, shift:0},
     {type:'pos',  name:'取付穴の位置度',  t:0.1, mmc:true, sup:0.1, slo:0, coef:1, dist:'disc'},
     {type:'float',name:'締結の遊び',      hnom:6.2, hup:0.05, hlo:0, fnom:6, fup:0, flo:-0.05, coef:1, dist:'uniform'}
@@ -170,9 +170,9 @@ function itemHTML(it, i){
   if (it.type === 'dim') {
     b += numF('nom', '基準寸法', it.nom) + numF('up', '上の許容差', it.up) + numF('lo', '下の許容差', it.lo);
   } else if (it.type === 'prof') {
-    b += numF('t', '公差値 t', it.t, 'min="0"');
+    b += numF('t', '公差値t', it.t, 'min="0"');
   } else if (it.type === 'pos') {
-    b += numF('t', '位置度 φt', it.t, 'min="0"');
+    b += numF('t', '位置度φt', it.t, 'min="0"');
     b += `<label class="chk"><input type="checkbox" data-k="mmc" data-rebuild${it.mmc ? ' checked' : ''}> Ⓜ（最大実体公差方式）</label>`;
     if (it.mmc) b += numF('sup', 'サイズの上の許容差', it.sup, '', 'nl') + numF('slo', 'サイズの下の許容差', it.slo);
   } else if (it.type === 'float') {
@@ -180,7 +180,7 @@ function itemHTML(it, i){
     b += numF('fnom', '軸・ボルト 基準寸法', it.fnom, '', 'nl') + numF('fup', '軸 上の許容差', it.fup) + numF('flo', '軸 下の許容差', it.flo);
   }
   if (it.dist === 'cpk') b += numF('cpk', 'Cpk', it.cpk, 'min="0.01"', it.type === 'dim' ? 'nl' : '') + numF('shift', '平均のずれ', it.shift ?? 0);
-  if (it.dist === 'meas') b += numF('mean', '実測の平均', it.mean, '', 'nl') + numF('sd', '実測の σ', it.sd, 'min="0"');
+  if (it.dist === 'meas') b += numF('mean', '実測の平均', it.mean, '', 'nl') + numF('sd', '実測のσ', it.sd, 'min="0"');
   b += `<div class="err1"></div>`;
   return `<div class="it${i === sel ? ' sel' : ''}" data-i="${i}">
     <div class="it-h">
@@ -202,7 +202,7 @@ function vecHTML(v, i){
       <button class="x" title="このベクトルを削除" data-del>✕</button>
     </div>
     <div class="it-b">
-      ${numF('ln', '長さ mm', v.ln)}${numF('lup', '長さ 上の許容差', v.lup)}${numF('llo', '長さ 下の許容差', v.llo)}
+      ${numF('ln', '長さmm', v.ln)}${numF('lup', '長さ 上の許容差', v.lup)}${numF('llo', '長さ 下の許容差', v.llo)}
       ${numF('an', '角度 °', v.an, '', 'nl')}${numF('aup', '角度 上の許容差', v.aup)}${numF('alo', '角度 下の許容差', v.alo)}
       <div class="err1"></div>
     </div></div>`;
@@ -370,7 +370,7 @@ function checkItem(it){
   if (it.type === 'float' && (it.hup < it.hlo || it.fup < it.flo)) return {bad:['hup','fup'], msg:'上の許容差が下の許容差より小さい'};
   if (it.dist === 'cpk' && it.shift) {
     const h = it.type === 'dim' ? (it.up - it.lo) / 2 : it.t / 2;
-    if (Math.abs(it.shift) >= h) return {bad:['shift'], msg:'平均のずれが公差の半幅以上（Cpk が定義できない）'};
+    if (Math.abs(it.shift) >= h) return {bad:['shift'], msg:'平均のずれが公差の半幅以上（Cpkが定義できない）'};
   }
   return null;
 }
@@ -442,7 +442,7 @@ function calc(){
     const data = state.mode === '1d' ? state.d1 : state.d2;
     if (state.mode === '1d') markRows($('items'), state.d1.items, checkItem); else markRows($('vecs'), state.d2.vecs, checkVec);
     const p = prepare(state.mode, data);
-    $('rowErr').textContent = p.errs.length ? `${p.errs.map(i => i + 1).join('・')} 行目は入力に不備があるため計算から外している` : '';
+    $('rowErr').textContent = p.errs.length ? `${p.errs.map(i => i + 1).join('・')}行目は入力に不備があるため計算から外している` : '';
     const names = outNames();
     $('dfigT0').textContent = `${names[0]}の分布と規格`;
     $('dfigT1').textContent = `${names[1] || ''}の分布と規格`;
@@ -494,7 +494,7 @@ function redrawBlocks(){
 
 const ppmText = (p, n) => p === null || p === undefined ? '—'
   : p === 0 ? (n ? `0（${n.toLocaleString('ja-JP')}回中）` : '0')
-  : p < 1 ? '1 ppm 未満' : `${Math.round(p).toLocaleString('ja-JP')} ppm`;
+  : p < 1 ? '1 ppm未満' : `${Math.round(p).toLocaleString('ja-JP')} ppm`;
 const VERDICT = {
   ok: '合格：全部品が公差内なら、ワーストケースでも規格内',
   warn: '条件付き：統計では規格内。ワーストケースでは規格外、または公差外れの部品を含む',
@@ -508,11 +508,11 @@ function renderResults(){
   const rows = [
     ['基準値 / 中心値', o => `${fmt(o.nom)} / ${fmt(o.center)}`],
     ['ワーストケース', o => `${rng(o.wcMin, o.wcMax)}<span class="sub">（±${fmt(o.wcHalf)}）</span>`, 'big'],
-    ['統計 ±3σ', o => `${rng(o.stMin, o.stMax)}<span class="sub">（平均 ${fmt(o.mean)}、σ ${o.sd.toFixed(4)}）</span>`, 'big'],
-    ['出力の Cpk（正規近似）', o => fmtCpk(o.cpk)],
+    ['統計 ±3σ', o => `${rng(o.stMin, o.stMax)}<span class="sub">（平均${fmt(o.mean)}、σ ${o.sd.toFixed(4)}）</span>`, 'big'],
+    ['出力のCpk（正規近似）', o => fmtCpk(o.cpk)],
     ['補正RSS ×1.5', o => rng(o.bdMin, o.bdMax)],
-    ['モンテカルロ 99.73%', o => pend ? PEND : o.mc ? `${rng(o.mc.lo, o.mc.hi)}<span class="sub">（σ ${o.mc.sd.toFixed(4)}）</span>` : '—', 'big'],
-    ['規格外れ率 MC / 正規近似', o => `${pend ? PEND : o.mc ? ppmText(o.mc.ppm, o.mc.ppm === 0 ? o.mc.n : 0) : '—'}<span class="sub"> / ${ppmText(o.ppmNormal)}</span>`]
+    ['モンテカルロ99.73%', o => pend ? PEND : o.mc ? `${rng(o.mc.lo, o.mc.hi)}<span class="sub">（σ ${o.mc.sd.toFixed(4)}）</span>` : '—', 'big'],
+    ['規格外れ率MC / 正規近似', o => `${pend ? PEND : o.mc ? ppmText(o.mc.ppm, o.mc.ppm === 0 ? o.mc.n : 0) : '—'}<span class="sub"> / ${ppmText(o.ppmNormal)}</span>`]
   ];
   let h = `<table class="res"><thead><tr><th class="k"></th>${names.map(n => `<th>${esc(n)}</th>`).join('')}</tr></thead><tbody>`;
   h += rows.map(([k, f, cls]) => `<tr${cls ? ` class="${cls}"` : ''}><td class="k">${k}</td>${col(f)}</tr>`).join('');
@@ -522,7 +522,7 @@ function renderResults(){
   });
   // 公差外れの部品（ワーストケースの前提が崩れる）
   const src = last.p.mode === '1d' ? last.p.items : last.p.vecs;
-  const ws = (outs[0].warns || []).map((w, k) => w ? `${esc(src[k].name)}：${w === 'meas' ? '実測の平均±3σが公差域からはみ出す' : 'Cpk が 1 未満'}` : null).filter(Boolean);
+  const ws = (outs[0].warns || []).map((w, k) => w ? `${esc(src[k].name)}：${w === 'meas' ? '実測の平均±3σが公差域からはみ出す' : 'Cpkが1未満'}` : null).filter(Boolean);
   if (ws.length) h += `<div class="warnbox">公差外れの部品が見込まれるため、ワーストケースでの合格判定はしていない。<br>${ws.join('<br>')}</div>`;
   const nonNormal = !pend && outs.some(o => o.mc && o.ppmNormal !== null && o.mc.ppm !== null && Math.abs(o.mc.ppm - o.ppmNormal) > Math.max(50, 0.3 * o.ppmNormal));
   if (nonNormal) h += `<p class="note">モンテカルロと正規近似の規格外れ率が大きく違う。一様分布や組付けの遊び、2次元の非線形の影響で、出力が正規分布から外れている。モンテカルロの値を優先して判断する。</p>`;
@@ -545,7 +545,7 @@ function renderContrib(){
     const mx = Math.max(...o.contrib.map(c => Math.max(c.var, c.wc)), 1e-9);
     $('contrib').innerHTML = items.map((it, k) => {
       const c = o.contrib[k];
-      const sub = `${TYPE_NAME[it.type]}　±${fmtT(c.h)}${Math.abs(c.a) !== 1 ? `　係数 ${fmtT(c.a)}` : ''}`;
+      const sub = `${TYPE_NAME[it.type]}　±${fmtT(c.h)}${Math.abs(c.a) !== 1 ? `　係数${fmtT(c.a)}` : ''}`;
       const dr = it.type === 'float' ? '' : ` data-drag="tol" data-i="${it.idx}"`;
       return contribRow(it.name, sub, c.var / mx, c.wc / mx, pctT(c.var), dr);
     }).join('');
@@ -557,7 +557,7 @@ function renderContrib(){
     last.p.vecs.forEach((v, i) => {
       [['l', '長さ', 'mm'], ['a', '角度', '°']].forEach(([p, t, u], j) => {
         const k = 2 * i + j;
-        const sub = `±${fmtT(c0[k].h)}${u}　感度 ${fmtT(c0[k].a)} / ${fmtT(c1[k].a)}`;
+        const sub = `±${fmtT(c0[k].h)}${u}　感度${fmtT(c0[k].a)} / ${fmtT(c1[k].a)}`;
         h += contribRow(`${v.name} ${t}`, sub, c0[k].var / mx, c1[k].var / mx, `${pctT(c0[k].var)} / ${pctT(c1[k].var)}`, ` data-drag="tol2" data-i="${v.idx}" data-p="${p}"`);
       });
     });
@@ -801,7 +801,7 @@ function drawBlocks(items, r, W){
   const sl = specLines(smin, smax, X, yr0 - 14, ys - 8, yG + 34, 'blk', 0);
   const yAxis = ys + 4;
   g += sl.g + axisTicks(lo, hi, X, yAxis, narrow ? 4 : 8);
-  if (geo.length) g += `<text x="${W - R}" y="${yN + bh + 16}" text-anchor="end" font-size="11" style="fill:var(--pur)">＋ 幾何公差・遊び ${geo.length} 項目（基準値 0。内訳に表示）</text>`;
+  if (geo.length) g += `<text x="${W - R}" y="${yN + bh + 16}" text-anchor="end" font-size="11" style="fill:var(--pur)">＋ 幾何公差・遊び${geo.length}項目（基準値0。内訳に表示）</text>`;
   const H = yAxis + 24;
   return `<svg xmlns="${SVGNS}" viewBox="0 0 ${W} ${H}" role="img" aria-label="積み上げブロック図">${g}${hits}${handles}${sl.hit}</svg>`;
 }
@@ -862,7 +862,7 @@ function drawInset(pts, d, ox, oy, iw, ih, s0){
   const P = (x, y) => [cx + (x - tx) * s, cy - (y - ty) * s];
   let g = `<rect x="${ox}" y="${oy}" width="${iw}" height="${ih}" rx="6" style="fill:var(--card);stroke:var(--line)"/>`;
   const mag = s / s0;
-  g += `<text x="${ox + 8}" y="${oy + 15}" font-size="11" style="fill:var(--sub)">目標点付近の拡大（約 ${mag >= 10 ? Math.round(mag).toLocaleString('ja-JP') : mag.toPrecision(2)} 倍）</text>`;
+  g += `<text x="${ox + 8}" y="${oy + 15}" font-size="11" style="fill:var(--sub)">目標点付近の拡大（約${mag >= 10 ? Math.round(mag).toLocaleString('ja-JP') : mag.toPrecision(2)}倍）</text>`;
   const al = Math.min(iw, ih) * 0.4;
   [[ux, uy, 'ok', g1], [-uy, ux, 'warn', g2]].forEach(([ax, ay, c, val]) => {
     const [x0, y0] = P(tx, ty);
@@ -1060,23 +1060,23 @@ function renderAlloc(){
   try { a = allocate(p.mode, data, target); } catch(err) { $('allocBox').innerHTML = `<p class="err">計算できなかった：${esc(err.message)}</p>`; return; }
   lastAlloc = {a, p, target};
   if (!a.hasSpec) { $('allocBox').innerHTML = '<p class="note">規格（下限・上限）を入れると、目標を満たすのに必要な公差を計算する。</p>'; return; }
-  const tName = target.type === 'wc' ? 'ワーストケースで規格内' : `出力の Cpk ≥ ${fmtT(target.cpk)}`;
+  const tName = target.type === 'wc' ? 'ワーストケースで規格内' : `出力のCpk ≥ ${fmtT(target.cpk)}`;
   let h = '';
   // 現状
   const st = a.base.map((r, k) => {
     const sp = p.spec[k] || {};
     if (!isNum(sp.min) && !isNum(sp.max)) return null;
-    return `${names.length > 1 ? esc(names[k]) + '：' : ''}Cpk ${fmtCpk(r.cpk)}、ワーストケース ${fmt(r.wcMin)} 〜 ${fmt(r.wcMax)}（規格 ${isNum(sp.min) ? fmt(sp.min) : '—'} 〜 ${isNum(sp.max) ? fmt(sp.max) : '—'}）`;
+    return `${names.length > 1 ? esc(names[k]) + '：' : ''}Cpk ${fmtCpk(r.cpk)}、ワーストケース${fmt(r.wcMin)} 〜 ${fmt(r.wcMax)}（規格${isNum(sp.min) ? fmt(sp.min) : '—'} 〜 ${isNum(sp.max) ? fmt(sp.max) : '—'}）`;
   }).filter(Boolean);
   h += `<p class="alloc-s">現状：${st.join('<br>')}</p>`;
   h += `<p class="alloc-s"><b>${a.met ? '現状で目標（' + tName + '）を満たしている。' : '現状では目標（' + tName + '）を満たしていない。'}</b></p>`;
   // 案A：全項目を同じ倍率で
   const u = a.uniform;
   if (!a.vars.length) h += '<p class="alloc-s">調整できる項目がない（実測分布と組付けの遊びは対象外）。</p>';
-  else if (u.k === null) h += '<p class="alloc-s"><b>案A</b>：調整できる項目の公差をすべて 0 にしても届かない。対象外の項目（実測分布・組付けの遊び）か、平均の位置が原因。</p>';
+  else if (u.k === null) h += '<p class="alloc-s"><b>案A</b>：調整できる項目の公差をすべて0にしても届かない。対象外の項目（実測分布・組付けの遊び）か、平均の位置が原因。</p>';
   else {
     const pct = Math.round((u.k - 1) * 100);
-    const msg = u.cap ? '全項目の公差を 10 倍以上に広げても成立する。'
+    const msg = u.cap ? '全項目の公差を10倍以上に広げても成立する。'
       : u.k >= 1 ? `全項目の公差を <b>×${u.k.toFixed(3)}</b>（${pct >= 0 ? '+' : ''}${pct}%）まで広げても成立する。`
       : `全項目の公差を <b>×${u.k.toFixed(3)}</b>（${pct}%）に縮めれば成立する。`;
     h += `<p class="alloc-s"><b>案A　全項目を同じ倍率で変える</b>：${msg}${u.cap ? '' : ' <button class="sm" data-apply="u">この案を反映</button>'}</p>`;
@@ -1099,13 +1099,13 @@ function renderAlloc(){
   if (target.type === 'cpk') a.center.forEach((c, k) => {
     if (c === null) return;
     const sp = p.spec[k], half = (sp.max - sp.min) / 2;
-    if (Math.abs(c) > half * 0.02) h += `<p class="note">${names.length > 1 ? esc(names[k]) + '：' : ''}平均が規格の中心から ${fmt(-c)} ずれている。基準寸法などで ${c > 0 ? '+' : ''}${fmt(c)} 寄せると中心に来て、必要な公差は緩くなる。</p>`;
+    if (Math.abs(c) > half * 0.02) h += `<p class="note">${names.length > 1 ? esc(names[k]) + '：' : ''}平均が規格の中心から${fmt(-c)}ずれている。基準寸法などで${c > 0 ? '+' : ''}${fmt(c)}寄せると中心に来て、必要な公差は緩くなる。</p>`;
   });
   if (p.mode === '1d') {
     const ex = p.items.filter(it => it.dist === 'meas' || it.type === 'float').map(it => esc(it.name));
     if (ex.length) h += `<p class="note">対象外（固定として計算）：${ex.join('、')}</p>`;
   }
-  h += `<p class="note">逆算は正規近似（統計±3σ）とワーストケースで行い、モンテカルロは使っていない。公差域の中心は変えない。反映すると公差は 0.001 単位に切り捨てる。位置度は φt だけを変え、ボーナス公差のもとのサイズ公差は変えない。</p>`;
+  h += `<p class="note">逆算は正規近似（統計±3σ）とワーストケースで行い、モンテカルロは使っていない。公差域の中心は変えない。反映すると公差は0.001単位に切り捨てる。位置度はφtだけを変え、ボーナス公差のもとのサイズ公差は変えない。</p>`;
   $('allocBox').innerHTML = h;
 }
 // 逆算の結果を入力に反映する
@@ -1212,7 +1212,7 @@ async function loadFromHash(){
     if (commitTimer) commit();
     state = s.state; sel = null;
     commit(); save(); renderInputs(); calc();
-    notice('共有URLの内容を読み込んだ。読み込む前の入力には「元に戻す」で戻れる。' + (s.dropped ? `（読めない項目 ${s.dropped} 件を外した）` : ''));
+    notice('共有URLの内容を読み込んだ。読み込む前の入力には「元に戻す」で戻れる。' + (s.dropped ? `（読めない項目${s.dropped}件を外した）` : ''));
   } catch(e) { notice('共有URLを読み込めなかった（URLが途中で切れている可能性がある）。'); }
   history.replaceState(null, '', location.pathname + location.search);
 }
@@ -1235,20 +1235,20 @@ function itemValueText(it){
   let s;
   if (it.type === 'dim') s = `${fmtT(it.nom)}（${tolText(it)}）`;
   else if (it.type === 'prof') s = `t ${fmtT(it.t)}`;
-  else if (it.type === 'pos') s = `φ${fmtT(it.t)}${it.mmc ? ` Ⓜ（サイズ ${sgn(it.sup)}/${sgn(it.slo)}）` : ''}`;
-  else s = `穴 ${fmtT(it.hnom)} ${sgn(it.hup)}/${sgn(it.hlo)}、軸 ${fmtT(it.fnom)} ${sgn(it.fup)}/${sgn(it.flo)}`;
+  else if (it.type === 'pos') s = `φ${fmtT(it.t)}${it.mmc ? ` Ⓜ（サイズ${sgn(it.sup)}/${sgn(it.slo)}）` : ''}`;
+  else s = `穴${fmtT(it.hnom)} ${sgn(it.hup)}/${sgn(it.hlo)}、軸${fmtT(it.fnom)} ${sgn(it.fup)}/${sgn(it.flo)}`;
   return s;
 }
 function distText(o){
   let s = DIST_NAME[o.dist] || o.dist;
-  if (o.dist === 'cpk') s += `（Cpk ${fmtT(o.cpk)}${o.shift ? `、平均のずれ ${fmtT(o.shift)}` : ''}）`;
-  if (o.dist === 'meas') s += `（平均 ${fmtT(o.mean)}、σ ${fmtT(o.sd)}）`;
+  if (o.dist === 'cpk') s += `（Cpk ${fmtT(o.cpk)}${o.shift ? `、平均のずれ${fmtT(o.shift)}` : ''}）`;
+  if (o.dist === 'meas') s += `（平均${fmtT(o.mean)}、σ ${fmtT(o.sd)}）`;
   return s;
 }
 function buildReport(){
   if (!last) { $('report').innerHTML = '<p>計算できる入力がない。</p>'; return; }
   const p = last.p, names = outNames(), o0 = last.res.outs;
-  let h = `<h1>公差積み上げ計算 レポート</h1><p>作成：${nowText()}　計算の種類：${p.mode === '1d' ? '1次元' : '2次元ベクトルループ'}　モンテカルロ：${state.n ? state.n.toLocaleString('ja-JP') + ' 回（乱数の種 1）' : '行わない'}</p>`;
+  let h = `<h1>公差積み上げ計算 レポート</h1><p>作成：${nowText()}　計算の種類：${p.mode === '1d' ? '1次元' : '2次元ベクトルループ'}　モンテカルロ：${state.n ? state.n.toLocaleString('ja-JP') + '回（乱数の種1）' : '行わない'}</p>`;
   h += '<h2>入力</h2><table class="tb"><thead><tr>';
   if (p.mode === '1d') {
     h += '<th class="l">#</th><th class="l">名称</th><th class="l">種類</th><th>係数</th><th class="l">値</th><th class="l">分布</th><th>±半幅</th></tr></thead><tbody>';
@@ -1258,7 +1258,7 @@ function buildReport(){
     h += p.vecs.map(v => `<tr><td class="l">${v.idx + 1}</td><td class="l">${esc(v.name)}</td><td>${fmtT(v.ln)} ${sgn(v.lup)}/${sgn(v.llo)}</td><td>${fmtT(v.an)} ${sgn(v.aup)}/${sgn(v.alo)}</td><td class="l">${v.rel ? '前のベクトルから' : 'x軸から'}</td><td class="l">${distText(v)}</td></tr>`).join('');
   }
   h += '</tbody></table>';
-  if (p.mode === '2d') h += `<p>測定方向 ${fmtT(p.opt.phi)}°、目標点 (${fmtT(p.opt.tx)}, ${fmtT(p.opt.ty)})</p>`;
+  if (p.mode === '2d') h += `<p>測定方向${fmtT(p.opt.phi)}°、目標点 (${fmtT(p.opt.tx)}, ${fmtT(p.opt.ty)})</p>`;
   if (p.errs.length) h += `<p>入力に不備があり計算から外した行：${p.errs.map(i => i + 1).join('・')}</p>`;
   h += `<p>規格：${p.spec.map((sp, k) => `${esc(names[k])} ${isNum(sp.min) ? fmt(sp.min) : '—'} 〜 ${isNum(sp.max) ? fmt(sp.max) : '—'}`).join('　')}</p>`;
   h += '<h2>結果</h2>' + $('resBox').innerHTML;
@@ -1268,8 +1268,8 @@ function buildReport(){
   if (p.mode === '1d') h += p.items.map((it, k) => { const c = o0[0].contrib[k]; return `<tr><td class="l">${esc(it.name)}</td><td>${fmtT(c.h)}</td><td>${fmtT(c.a)}</td><td>${pctT(c.var)}</td><td>${pctT(c.wc)}</td></tr>`; }).join('');
   else p.vecs.forEach((v, i) => ['長さ', '角度'].forEach((t, j) => { const k = 2 * i + j, c0 = o0[0].contrib[k], c1 = o0[1].contrib[k]; h += `<tr><td class="l">${esc(v.name)} ${t}</td><td>${fmtT(c0.h)}</td><td>${fmtT(c0.a)} / ${fmtT(c1.a)}</td><td>${pctT(c0.var)}</td><td>${pctT(c1.var)}</td></tr>`; }));
   h += '</tbody></table>';
-  if (lastAlloc && lastAlloc.a.hasSpec) h += `<h2>必要な公差の逆算（目標：${lastAlloc.target.type === 'wc' ? 'ワーストケースで規格内' : '出力の Cpk ≥ ' + fmtT(lastAlloc.target.cpk)}）</h2>` + $('allocBox').innerHTML.replace(/<details[^>]*>/g, '<details open>');
-  h += `<h2>計算の前提</h2><p class="note">ワーストケース：各項目の |係数|×公差の半幅 の和（2次元は感度係数による線形近似）。統計：各項目の分布から求めた σ に係数を掛けた二乗和平方根（正規分布の項目は公差＝±3σ）。判定：全部品が公差内である前提でワーストケースが規格内なら合格、統計（モンテカルロの 0.135〜99.865%、なければ ±3σ）で規格内なら条件付き、それ以外は不合格。</p>`;
+  if (lastAlloc && lastAlloc.a.hasSpec) h += `<h2>必要な公差の逆算（目標：${lastAlloc.target.type === 'wc' ? 'ワーストケースで規格内' : '出力のCpk ≥ ' + fmtT(lastAlloc.target.cpk)}）</h2>` + $('allocBox').innerHTML.replace(/<details[^>]*>/g, '<details open>');
+  h += `<h2>計算の前提</h2><p class="note">ワーストケース：各項目の |係数|×公差の半幅 の和（2次元は感度係数による線形近似）。統計：各項目の分布から求めたσに係数を掛けた二乗和平方根（正規分布の項目は公差＝±3σ）。判定：全部品が公差内である前提でワーストケースが規格内なら合格、統計（モンテカルロの0.135〜99.865%、なければ ±3σ）で規格内なら条件付き、それ以外は不合格。</p>`;
   $('report').innerHTML = h;
 }
 async function waitMC(){ for (let i = 0; i < 100 && last && last.pending; i++) await new Promise(r => setTimeout(r, 100)); }
@@ -1295,7 +1295,7 @@ $('file').onchange = async e => {
     let added = 0;
     if (Array.isArray(d.cases)) { const cs = d.cases.map(sanCase).filter(Boolean); cases.push(...cs); added = cs.length; saveCases(); }
     commit(); save(); renderInputs(); calc();
-    notice(`ファイルを読み込んだ。${added ? `ケース ${added} 件を一覧に追加した。` : ''}${s.dropped ? `読めない項目 ${s.dropped} 件を外した。` : ''}読み込む前の入力には「元に戻す」で戻れる。`);
+    notice(`ファイルを読み込んだ。${added ? `ケース${added}件を一覧に追加した。` : ''}${s.dropped ? `読めない項目${s.dropped}件を外した。` : ''}読み込む前の入力には「元に戻す」で戻れる。`);
   } catch(_) { notice('読み込めない形式のファイルだった。'); }
   e.target.value = '';
 };
@@ -1312,7 +1312,7 @@ try {
 }
 hist = [snap()]; hpos = 0; updUndo();
 if (L0.broken) notice('保存データが壊れていたため、初期状態に戻した。');
-else if (L0.dropped) notice(`保存データのうち読めない項目 ${L0.dropped} 件を外した。`);
+else if (L0.dropped) notice(`保存データのうち読めない項目${L0.dropped}件を外した。`);
 loadFromHash();
 // 画面幅が変わったら図を描き直す
 let rsz; addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { if (last) { renderFigs(); } }, 150); });
